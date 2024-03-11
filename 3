@@ -1,0 +1,15 @@
+document.getElementById('taskCard').addEventListener('click', function() {
+    this.classList.add('flipped');
+    const tasks = [
+        'Walk for 30 minutes.',
+        'Read a book for an hour.',
+        'Write a daily journal.',
+        'Clean your working space.',
+        'Call a friend or family member.',
+        'Cook a new recipe.',
+        'Learn something new online.',
+        'Meditate for 15 minutes.'
+    ];
+    const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
+    document.getElementById('taskText').textContent = randomTask;
+});
