@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>正宗散养老母鸡 | 农家土鸡 三年走地鸡</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    background: #f4f4f4;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.6;
+    padding-bottom: 60px;
+  }
+  .page { max-width: 750px; margin: 0 auto; background: #fff; }
+
+  /* 主图轮播区 */
+  .gallery {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe0b3 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px;
+  }
+  .gallery .badge {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(0,0,0,.55); color: #fff;
+    padding: 4px 10px; border-radius: 20px; font-size: 12px;
+  }
+  .gallery .index {
+    position: absolute; bottom: 16px; right: 16px;
+    background: rgba(0,0,0,.5); color: #fff;
+    padding: 3px 10px; border-radius: 12px; font-size: 12px;
+  }
+
+  /* 价格区 */
+  .price-block {
+    padding: 16px;
+    background: linear-gradient(135deg, #ff5b1f 0%, #ff8f3c 100%);
+    color: #fff;
+  }
+  .price-block .now {
+    font-size: 14px;
+  }
+  .price-block .now b {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 4px;
+    vertical-align: -2px;
+  }
+  .price-block .old {
+    text-decoration: line-through;
+    opacity: .7;
+    margin-left: 8px;
+    font-size: 13px;
+  }
+  .price-block .tag {
+    display: inline-block;
+    background: #fff200;
+    color: #d12e00;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 700;
+  }
+  .price-block .sales {
+    margin-top: 6px; font-size: 12px; opacity: .9;
+  }
+
+  /* 标题区 */
+  .title-block { padding: 14px 16px; border-bottom: 1px solid #f2f2f2; }
+  .title-block h1 {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #222;
+  }
+  .title-block .sub {
+    margin-top: 6px;
+    color: #888;
+    font-size: 13px;
+  }
+
+  /* 服务保障 */
+  .service {
+    display: flex; flex-wrap: wrap;
+    padding: 12px 16px;
+    font-size: 12px; color: #666;
+    border-bottom: 8px solid #f4f4f4;
+  }
+  .service span {
+    margin-right: 14px;
+    display: flex; align-items: center;
+  }
+  .service span::before {
+    content: "✓"; color: #ff5b1f; font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* 规格选择 */
+  .section {
+    padding: 14px 16px;
+    border-bottom: 8px solid #f4f4f4;
+  }
+  .section .label {
+    color: #999; font-size: 13px; margin-bottom: 10px;
+  }
+  .specs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .specs .item {
+    padding: 8px 14px;
+    background: #f6f6f6;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #333;
+  }
+  .specs .item.active {
+    background: #fff3ec;
+    border-color: #ff5b1f;
+    color: #ff5b1f;
+  }
+
+  /* 详情图文 */
+  .detail-tab {
+    display: flex; justify-content: center;
+    padding: 16px 0 8px;
+    font-size: 15px; font-weight: 600;
+    color: #222;
+  }
+  .detail-tab span {
+    position: relative; padding: 0 16px;
+  }
+  .detail-tab span::before,
+  .detail-tab span::after {
+    content: ""; position: absolute; top: 50%;
+    width: 24px; height: 1px; background: #ddd;
+  }
+  .detail-tab span::before { right: 100%; }
+  .detail-tab span::after  { left: 100%; }
+
+  .detail img, .detail .pic {
+    width: 100%; display: block;
+  }
+  .detail .pic {
+    aspect-ratio: 4/3;
+    background: #fafafa;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 60px;
+    color: #ccc;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .detail h2 {
+    font-size: 16px;
+    color: #222;
+    padding: 18px 16px 8px;
+    font-weight: 600;
+  }
+  .detail h2::before {
+    content: ""; display: inline-block;
+    width: 4px; height: 14px; background: #ff5b1f;
+    margin-right: 8px; vertical-align: -2px; border-radius: 2px;
+  }
+  .detail p {
+    padding: 0 16px 12px;
+    color: #555; font-size: 14px;
+  }
+
+  /* 卖点卡片 */
+  .sellpoints {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 4px 16px 16px;
+  }
+  .sellpoints .card {
+    background: linear-gradient(135deg, #fff8f0, #fff);
+    border: 1px solid #ffe0c2;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .sellpoints .card .icon { font-size: 22px; margin-bottom: 6px; }
+  .sellpoints .card .t { font-size: 14px; font-weight: 600; color: #d94800; }
+  .sellpoints .card .d { font-size: 12px; color: #888; margin-top: 4px; }
+
+  /* 参数表 */
+  .param {
+    margin: 0 16px 16px;
+    background: #faf9f7;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .param .row {
+    display: flex;
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0ece4;
+    font-size: 13px;
+  }
+  .param .row:last-child { border-bottom: none; }
+  .param .row .k { color: #888; width: 90px; flex-shrink: 0; }
+  .param .row .v { color: #333; flex: 1; }
+
+  /* 食用方法 */
+  .recipe {
+    margin: 0 16px 16px;
+    padding: 14px;
+    background: #fffaf2;
+    border-left: 3px solid #ff8f3c;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #555;
+  }
+  .recipe b { color: #d94800; }
+  .recipe ol { padding-left: 18px; margin-top: 6px; }
+  .recipe li { margin-bottom: 4px; }
+
+  /* 评价 */
+  .review {
+    padding: 4px 16px 16px;
+  }
+  .review .head {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 10px 0;
+  }
+  .review .head .score { color: #ff5b1f; font-weight: 600; }
+  .review .item {
+    padding: 12px 0;
+    border-top: 1px solid #f2f2f2;
+    font-size: 13px;
+  }
+  .review .item .user {
+    color: #888; font-size: 12px; margin-bottom: 4px;
+  }
+  .review .item .stars { color: #ffb400; margin-right: 6px; }
+
+  /* 底部购买栏 */
+  .footbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-width: 750px; margin: 0 auto;
+    height: 56px;
+    background: #fff;
+    display: flex; align-items: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,.06);
+    z-index: 99;
+  }
+  .footbar .ico {
+    flex: 0 0 60px;
+    text-align: center;
+    font-size: 11px;
+    color: #666;
+  }
+  .footbar .ico .em { display: block; font-size: 20px; margin-bottom: 2px; }
+  .footbar .btn {
+    flex: 1;
+    height: 40px;
+    margin: 0 4px;
+    border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .footbar .btn.cart { background: linear-gradient(135deg, #ffb84d, #ff8f3c); margin-left: 8px; }
+  .footbar .btn.buy  { background: linear-gradient(135deg, #ff5b1f, #d94800); margin-right: 12px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 主图 -->
+  <div class="gallery">
+    🐔
+    <span class="badge">视频</span>
+    <span class="index">1 / 6</span>
+  </div>
+
+  <!-- 价格 -->
+  <div class="price-block">
+    <div class="now">
+      ¥<b>128</b>/只
+      <span class="old">¥168</span>
+      <span class="tag">限时直降</span>
+    </div>
+    <div class="sales">已售 3268 件 · 顺丰冷链次日达</div>
+  </div>
+
+  <!-- 标题 -->
+  <div class="title-block">
+    <h1>【三年散养】正宗农家土老母鸡 整鸡现杀真空包装 月子鸡煲汤食材</h1>
+    <div class="sub">山林散养 · 谷物喂养 · 当日现宰 · 顺丰冷链直达</div>
+  </div>
+
+  <!-- 服务保障 -->
+  <div class="service">
+    <span>无忧退换</span>
+    <span>顺丰冷链</span>
+    <span>坏单包赔</span>
+    <span>正品保证</span>
+  </div>
+
+  <!-- 规格 -->
+  <div class="section">
+    <div class="label">选择规格</div>
+    <div class="specs">
+      <div class="item">2 斤左右 / 单只</div>
+      <div class="item active">3 斤左右 / 单只</div>
+      <div class="item">3 斤 × 2 只</div>
+      <div class="item">4 斤 / 礼盒装</div>
+    </div>
+  </div>
+
+  <!-- 详情 -->
+  <div class="detail-tab"><span>商品详情</span></div>
+
+  <div class="detail">
+
+    <div class="pic">🌄</div>
+    <h2>来自深山林场 自然散养 730 天</h2>
+    <p>选自海拔 800 米山林农场，纯天然环境放养 24 个月以上，每日山间走动觅食，喝山泉水、吃玉米谷物与青草虫蚁，鸡肉紧实有嚼劲，鸡油金黄味浓。</p>
+
+    <div class="sellpoints">
+      <div class="card"><div class="icon">🌿</div><div class="t">纯粮喂养</div><div class="d">玉米/谷糠/青菜</div></div>
+      <div class="card"><div class="icon">⛰️</div><div class="t">山林散养</div><div class="d">24 个月以上</div></div>
+      <div class="card"><div class="icon">🔪</div><div class="t">当日现宰</div><div class="d">古法净膛工艺</div></div>
+      <div class="card"><div class="icon">🚚</div><div class="t">顺丰冷链</div><div class="d">真空保鲜直达</div></div>
+    </div>
+
+    <div class="pic">🍲</div>
+    <h2>一只好鸡 炖出一锅金汤</h2>
+    <p>慢炖 2 小时，胶质丰富，汤色金黄、香气浓郁，无需多调料，原汁原味。冷藏后汤汁可凝成淡淡胶冻——胶原蛋白满满的证明。</p>
+
+    <!-- 食用方法 -->
+    <div class="recipe">
+      <b>📖 古法炖汤秘诀</b>
+      <ol>
+        <li>冷水下锅 + 姜片 + 料酒，焯水撇沫 2 分钟</li>
+        <li>砂锅一次加足热水，大火烧开转小火</li>
+        <li>慢炖 2–3 小时，全程不揭盖、不加冷水</li>
+        <li>出锅前 10 分钟加盐，撒枸杞、葱花即可</li>
+        <li>切忌八角桂皮等重味香料，保留鸡的本鲜</li>
+      </ol>
+    </div>
+
+    <div class="pic">📦</div>
+    <h2>商品参数</h2>
+    <div class="param">
+      <div class="row"><span class="k">品名</span><span class="v">散养老母鸡（整只）</span></div>
+      <div class="row"><span class="k">净重</span><span class="v">约 1.5 kg ± 100 g</span></div>
+      <div class="row"><span class="k">饲养天数</span><span class="v">≥ 730 天</span></div>
+      <div class="row"><span class="k">产地</span><span class="v">福建 · 武夷山林场</span></div>
+      <div class="row"><span class="k">配送方式</span><span class="v">顺丰冷链 · 次日达</span></div>
+      <div class="row"><span class="k">保质期</span><span class="v">冷冻 -18℃ 180 天</span></div>
+      <div class="row"><span class="k">储存方式</span><span class="v">收货后请立即冷藏或冷冻</span></div>
+    </div>
+
+    <h2>用户评价 (3268)</h2>
+    <div class="review">
+      <div class="head">
+        <span>好评率 99%</span>
+        <span class="score">★★★★★ 4.9</span>
+      </div>
+      <div class="item">
+        <div class="user">王**女士 · 3 斤左右 / 单只</div>
+        <span class="stars">★★★★★</span>炖出来的汤金黄金黄的，鸡肉很有嚼劲，是小时候的味道，月子里吃正合适。
+      </div>
+      <div class="item">
+        <div class="user">林**先生 · 3 斤 × 2 只</div>
+        <span class="stars">★★★★★</span>真空包装很扎实，顺丰隔天就到了。煲汤香气满屋，不腥不柴，复购！
+      </div>
+      <div class="item">
+        <div class="user">陈**女士 · 4 斤 / 礼盒装</div>
+        <span class="stars">★★★★★</span>送给爸妈很有面子，包装精美，鸡也确实正宗，老人家很满意。
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 底部购买栏 -->
+<div class="footbar">
+  <div class="ico"><span class="em">🏪</span>店铺</div>
+  <div class="ico"><span class="em">💬</span>客服</div>
+  <div class="ico"><span class="em">⭐</span>收藏</div>
+  <button class="btn cart">加入购物车</button>
+  <button class="btn buy">立即购买</button>
+</div>
+
+</body>
+</html>
