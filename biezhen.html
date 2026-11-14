@@ -69,6 +69,23 @@ button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
 .pop { position: absolute; top: 4px; pointer-events: none; font-family: var(--font-num); font-weight: 700; font-size: 1rem; animation: pop .7s ease-out forwards; }
 @keyframes pop { to { transform: translateY(-34px); opacity: 0; } }
 
+.strip { min-height: 52px; display: flex; align-items: stretch; }
+.strip p { align-self: center; color: var(--muted); font-size: .9rem; }
+.strip p.on { color: var(--goods); font-weight: 700; }
+.ship {
+  flex: 1; border: 2px solid var(--gold); border-radius: 14px; background: var(--warn-bg); color: var(--fg);
+  font-weight: 700; padding: 8px 14px; text-align: left; position: relative; overflow: hidden;
+  animation: dock .5s ease-out; touch-action: manipulation;
+}
+.ship small { display: block; font-weight: 400; font-size: .8rem; color: var(--muted); }
+.ship i { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--gold); }
+@keyframes dock { from { transform: translateX(40px); opacity: 0; } }
+.mute { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 0 10px; font-size: .8rem; color: var(--muted); }
+.achs { display: flex; flex-direction: column; gap: 8px; }
+.achs .list { display: flex; flex-wrap: wrap; gap: 6px; }
+.ach { font-size: .8rem; border: 1px dashed var(--line); color: var(--muted); border-radius: 999px; padding: 1px 10px; }
+.ach.got { border: 1px solid var(--goods); color: var(--goods); font-weight: 700; }
+.make.hot { box-shadow: 0 0 0 4px var(--gold); }
 .said { background: var(--quote); border-radius: 12px; padding: 12px 14px; font-size: .95rem; min-height: 3.4em; }
 .said b { font-family: var(--font-display); }
 
@@ -96,13 +113,13 @@ button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
 .big { font-family: var(--font-num); font-weight: 700; font-size: clamp(2.4rem, 11vw, 3.2rem); line-height: 1.1; color: var(--goods); }
 .recap div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .95rem; }
 .note { color: var(--muted); font-size: .875rem; }
-@media (prefers-reduced-motion: reduce) { .pop { display: none; } .bar i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .ship { animation: none; } .pop { display: none; } .bar i { transition: none; } }
 </style>
 </head>
 <body>
 
 <main>
-  <div class="top"><p class="brand">别针王国</p><p class="clock" id="clock"></p></div>
+  <div class="top"><p class="brand">别针王国</p><p class="clock" id="clock"></p><button class="mute" id="mute" type="button"></button></div>
 
   <div class="goal">
     <div class="row"><span>目标：全国每秒卖出 <b class="num">48,000</b> 根别针</span><span class="num" id="goalNum"></span></div>
@@ -116,6 +133,8 @@ button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
     <div class="stat" id="stockBox"><b id="sStock">0</b><span>仓库积压</span></div>
   </div>
 
+  <div class="strip" id="strip"></div>
+
   <div id="slot"></div>
 
   <button class="make" id="make" type="button">做一根针<small id="makeSub">点一下，做一根</small></button>
@@ -128,6 +147,7 @@ button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
     <button class="buy" id="bK" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
     <button class="buy" id="bM" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
   </div>
+  <div class="achs"><p class="note" id="achHead"></p><div class="list" id="achList"></div></div>
   <p class="note">斯密在《国富论》里记下：10 个人分工做针，一天 48,000 根。这里把它搬到了每秒。数值为游戏而编。</p>
 </main>
 
@@ -152,7 +172,7 @@ const EVENTS = [
     q: '资本因节俭而增加，因奢侈和妄为而减少。（卷二 第三章）' },
   { title: '行会的邀请', text: '别针行会请你入伙：大家约好不降价，再请国王下令，只许会员做针。', best: 1,
     opts: [
-      ['入伙。价钱抬高五成，还有一笔分红', '每根针多卖五成的钱，你还拿到 3,000。可是买得起的人少了四成。', s => { s.money += 3000; s.price *= 1.5; s.dem *= 0.6; }],
+      ['入伙。价钱抬高五成，还有一笔分红', '每根针多卖五成的钱，手头的钱也多了五成。可是买得起的人少了四成。', s => { s.money *= 1.5; s.price *= 1.5; s.dem *= 0.6; }],
       ['不入。谁想做针都可以', '同行越来越多，大家只能比谁做得更好更便宜。市场反倒大了一成。', s => { s.dem *= 1.1; }]
     ],
     q: '同行的人聚在一起，谈话的结果往往是对付公众的合谋，或是抬高价格的办法。（卷一 第十章）' },
@@ -165,7 +185,7 @@ const EVENTS = [
     q: '纸币像在空中开出一条车道，省下了大路；可它悬在代达罗斯的翅膀上，必须管住。（卷二 第二章）' },
   { title: '金银外流', text: '邻国的布又好又便宜，商人拿金银去换。大臣们说：金银少了，国家在变穷！', best: 1,
     opts: [
-      ['对外国货征重税，把金银留住', '国库进了 50,000。邻国对你的别针征了同样的税，市场小了三成。', s => { s.money += 50000; s.dem *= 0.7; }],
+      ['对外国货征重税，把金银留住', '手头的钱多了五成。邻国对你的别针征了同样的税，市场小了三成。', s => { s.money *= 1.5; s.dem *= 0.7; }],
       ['随他们买卖', '百姓省下的钱买了更多别的东西，邻国也更愿意买你的别针。市场大了四成。', s => { s.dem *= 1.4; }]
     ],
     q: '财富不是金银，而是人民每年能消费的东西。外国货更便宜，就拿自己擅长的去换。（卷四 第一、二章）' },
@@ -175,8 +195,37 @@ const EVENTS = [
       ['修桥铺路，设法庭，办学校', '四成的钱花掉了。货运得更远，市场大了五成；识字的工人手更巧，产量多了两成。', s => { s.money *= 0.6; s.dem *= 1.5; s.prod *= 1.2; }],
       ['补贴国王喜欢的丝绸业', '四成的钱花掉了。工人被丝绸坊挖走，别针产量少了一成。', s => { s.money *= 0.6; s.prod *= 0.9; }]
     ],
-    q: '君主有三件本分：国防，司法，以及没有哪个人肯独自出钱的公共工程和学校。（卷五 第一章）' }
+    q: '君主有三件本分：国防，司法，以及没有哪个人肯独自出钱的公共工程和学校。（卷五 第一章）' },
+  { title: '收成很差的大庄园', text: '王国最好的地由农奴耕种，种出来的全归主人。收成一年不如一年，粮价很高。', best: 1,
+    opts: [
+      ['多派监工，偷懒的挨鞭子', '监工一转身，锄头就停了。粮食还是贵，吃不饱的工人每人产量少了一成。', s => { s.prod *= 0.9; }],
+      ['让农奴成为自由佃农，多收的归自己', '佃农开始挖渠、施肥。粮食便宜了，工人吃得饱，每人产量多了两成。', s => { s.prod *= 1.2; }]
+    ],
+    q: '一个不能获得任何财产的人，除了尽量多吃、尽量少干，不会有别的利益。（卷三 第二章）' },
+  { title: '东方贸易公司', text: '一群大商人请求特许状：只有他们的公司可以和东方做生意。作为回报，给你一笔分红。', best: 1,
+    opts: [
+      ['授予独占特许', '手头的钱多了五成。茶叶和香料只此一家，百姓手头紧了，市场小了两成。', s => { s.money *= 1.5; s.dem *= 0.8; }],
+      ['贸易向所有商人开放', '几十家商号抢着出海，回程都愿意带上你的别针。市场大了三成。', s => { s.dem *= 1.3; }]
+    ],
+    q: '这类独占公司，无论从哪方面看，都是祸害。（卷四 第七章）' },
+  { title: '该收税了', text: '国库要有固定的进项，得定一套收税的办法。', best: 1,
+    opts: [
+      ['把收税权包给出价最高的商人', '包税人预付了一大笔，你手头的钱多了三成。之后他层层加码，你每卖一根针少收两成。', s => { s.money *= 1.3; s.price *= 0.8; }],
+      ['按收入比例收，数额和日期事先写明', '每卖一根针少收半成，仅此而已。人人知道该交多少，税吏无从勒索。', s => { s.price *= 0.95; }]
+    ],
+    q: '赋税四原则：按能力分担，数额确定，方便纳税人，征收的花费尽量小。（卷五 第二章）' }
 ];
+const PER_RUN = 6;
+const ACHS = [
+  ['win', '富起来了', '通关一次'], ['bronze', '铜章', '75 年内通关'], ['silver', '银章', '55 年内通关'], ['gold', '金章', '40 年内通关'],
+  ['smith', '斯密的学生', '六个抉择全与斯密一致并通关'], ['contra', '偏要唱反调', '六个抉择全与斯密不同，仍然通关'],
+  ['eighteen', '十八道工序', '把分工分到头'], ['ships', '船来船往', '一局里接到 8 艘商船'], ['hands', '熟能生巧', '连点到手熟 ×5']
+];
+const SHIPS = {
+  dem: ['远洋商船到港', '点它：20 秒内市场翻倍', '商船在港：市场翻倍'],
+  prod: ['一船好铁丝到港', '点它：20 秒内产量 ×3', '好铁丝在手：产量 ×3'],
+  cash: ['外国商人来订货', '点它：立刻收到 40 秒的货款', '']
+};
 
 const LESSONS = {
   start: '<b>开始。</b>先亲手做几根针卖掉，攒够钱就雇人。',
@@ -189,17 +238,18 @@ const LESSONS = {
 };
 
 const $ = id => document.getElementById(id);
-const fresh = () => ({ money: 0, stock: 0, w: 0, st: 1, k: 0, m: 0, prod: 1, dem: 1, cost: 1, wcost: 1, price: 1, earned: 0, t: 0, ev: 0, picks: [], seen: {}, said: 'start', pending: -1, shown: null, won: false });
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fresh = () => ({ order: shuffle(EVENTS.map((_, i) => i)).slice(0, PER_RUN), perm: [], ship: null, nextShip: 25, buff: null, combo: 1, clickT: -9, caught: 0, money: 0, stock: 0, w: 0, st: 1, k: 0, m: 0, prod: 1, dem: 1, cost: 1, wcost: 1, price: 1, earned: 0, t: 0, ev: 0, picks: [], seen: {}, said: 'start', pending: -1, shown: null, won: false });
 let s = fresh();
 
-const rate = () => s.w * 0.25 * Math.pow(240, (s.st - 1) / 17) * Math.pow(2, s.k) * s.prod;
+const rate = () => s.w * 0.25 * Math.pow(240, (s.st - 1) / 17) * Math.pow(2, s.k) * s.prod * (1 + 0.05 * achCount()) * (s.buff && s.buff.kind === 'prod' ? 3 : 1);
 const baseDem = m => m < MARKETS.length ? MARKETS[m][1] : MARKETS[5][1] * Math.pow(1.5, m - 5);
-const demand = () => baseDem(s.m) * s.dem;
+const demand = () => baseDem(s.m) * s.dem * (s.buff && s.buff.kind === 'dem' ? 2 : 1);
 const costW = () => 8 * Math.pow(1.13, s.w) * s.cost * s.wcost;
 const costS = () => s.st < 18 ? 30 * Math.pow(1.75, s.st - 1) * s.cost : Infinity;
 const costK = () => 400 * Math.pow(5, s.k) * s.cost;
 const costM = () => (s.m < 5 ? MCOST[s.m] : MCOST[4] * Math.pow(3, s.m - 4)) * s.cost;
-const clickGain = () => 1 + 0.1 * rate();
+const clickGain = () => (1 + 0.1 * rate()) * s.combo;
 
 function fmt(n) {
   if (!isFinite(n)) return '—';
@@ -210,8 +260,35 @@ function fmt(n) {
   return n.toFixed(1);
 }
 const years = t => Math.floor(t / YEAR) + 1;
-function best() { try { const v = +localStorage.getItem('pin-best'); return v > 0 ? v : 0; } catch (e) { return 0; } }
-function saveBest(v) { try { localStorage.setItem('pin-best', String(v)); } catch (e) {} }
+let meta = { best: 0, ach: {}, mute: false };
+try { const m = JSON.parse(localStorage.getItem('pin-meta') || 'null'); if (m && typeof m === 'object') meta = Object.assign(meta, m, { ach: Object.assign({}, m.ach) }); } catch (e) {}
+function saveMeta() { try { localStorage.setItem('pin-meta', JSON.stringify(meta)); } catch (e) {} }
+function best() { return meta.best > 0 ? meta.best : 0; }
+function saveBest(v) { meta.best = v; saveMeta(); }
+function achCount() { return ACHS.filter(a => meta.ach[a[0]]).length; }
+function award(id) {
+  if (meta.ach[id]) return;
+  meta.ach[id] = 1; saveMeta();
+  const a = ACHS.find(x => x[0] === id);
+  LESSONS['ach-' + id] = `<b>成就：${a[1]}。</b>${a[2]}。以后每一局的产量 +5%。`;
+  s.said = 'ach-' + id;
+  sound('ach');
+}
+let actx = null;
+function sound(kind) {
+  if (meta.mute) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = { click: [[520 + s.combo * 60, .04]], buy: [[440, .07], [660, .09]], ship: [[330, .1], [495, .1], [660, .14]], ach: [[523, .1], [659, .1], [784, .1], [1047, .2]], win: [[392, .15], [523, .15], [659, .15], [784, .15], [1047, .4]], pick: [[300, .08]] }[kind];
+    let t = actx.currentTime;
+    for (const [f, d] of notes) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(kind === 'click' ? .05 : .08, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d); t += d * .9;
+    }
+  } catch (e) {}
+}
 
 function say(key) { if (s.seen[key]) return; s.seen[key] = 1; s.said = key; }
 
@@ -223,7 +300,15 @@ function step(dt) {
   s.stock -= sold;
   s.money += sold * s.price;
   s.earned += sold * s.price;
-  if (s.pending < 0 && !s.shown && s.ev < EVENTS.length && s.earned >= TRIG[s.ev]) { s.pending = s.ev; renderSlot(); }
+  if (s.pending < 0 && !s.shown && s.ev < s.order.length && s.earned >= TRIG[s.ev]) {
+    s.pending = s.order[s.ev];
+    s.perm = shuffle(EVENTS[s.pending].opts.map((_, i) => i));
+    renderSlot();
+  }
+  if (s.buff && s.t >= s.buff.until) s.buff = null;
+  if (s.ship && s.t >= s.ship.until) { s.ship = null; s.nextShip = s.t + 20 + Math.random() * 25; }
+  if (!s.ship && s.w > 0 && s.t >= s.nextShip) { s.ship = { kind: ['dem', 'prod', 'cash'][Math.floor(Math.random() * 3)], from: s.t, until: s.t + 9 }; sound('ship'); }
+  if (s.combo > 1 && s.t - s.clickT > 1) s.combo = 1;
   if (rate() > demand() && s.stock > demand() * 20 && s.stock > 30) say('glut');
   if (Math.min(rate(), demand()) >= GOAL) win();
 }
@@ -240,7 +325,13 @@ function setBuy(id, name, what, cost, maxed) {
 
 function paint() {
   const r = rate(), d = demand(), sell = Math.min(r, d);
-  $('clock').textContent = `第 ${years(s.t)} 年` + (best() ? ` · 最快纪录 ${best()} 年` : '');
+  const nextMedal = !meta.ach.bronze ? '铜章 75 年内' : !meta.ach.silver ? '银章 55 年内' : !meta.ach.gold ? '金章 40 年内' : '';
+  $('clock').textContent = `第 ${years(s.t)} 年` + (best() ? ` · 纪录 ${best()} 年` : '') + (nextMedal ? ` · 下一枚 ${nextMedal}` : '');
+  $('mute').textContent = meta.mute ? '声音：关' : '声音：开';
+  paintStrip();
+  $('make').className = 'make' + (s.combo >= 5 ? ' hot' : '');
+  $('achHead').textContent = `成就 ${achCount()} / ${ACHS.length}　每个成就让以后每一局的产量 +5%`;
+  $('achList').innerHTML = ACHS.map(a => `<span class="ach${meta.ach[a[0]] ? ' got' : ''}" title="${a[2]}">${a[1]}：${a[2]}</span>`).join('');
   $('goalNum').textContent = `现在 ${fmt(sell)}`;
   $('goalBar').style.width = Math.min(100, Math.log10(1 + sell) / Math.log10(1 + GOAL) * 100).toFixed(1) + '%';
   $('sMoney').textContent = fmt(s.money);
@@ -248,7 +339,7 @@ function paint() {
   $('sDem').textContent = fmt(d);
   $('sStock').textContent = fmt(s.stock);
   $('stockBox').className = 'stat' + (r > d && s.stock > d * 5 && s.stock > 10 ? ' glut' : '');
-  $('makeSub').textContent = `点一下，做 ${fmt(clickGain())} 根`;
+  $('makeSub').textContent = `点一下，做 ${fmt(clickGain())} 根` + (s.combo > 1 ? `　手熟 ×${s.combo.toFixed(s.combo % 1 ? 2 : 0)}` : '　连着点会越点越快');
   $('said').innerHTML = LESSONS[s.said];
   setBuy('bW', '雇一个工人', `现有 ${s.w} 人`, costW(), false);
   setBuy('bS', '多分一道工序', s.st < 18 ? `现在 ${s.st} / 18 道，每人产量再 ×1.38` : '18 道，分到头了', costS(), s.st >= 18);
@@ -257,13 +348,27 @@ function paint() {
   setBuy('bM', `开拓市场：${next}`, `每秒能卖 ${fmt(d)} → ${fmt(baseDem(s.m + 1) * s.dem)}`, costM(), false);
 }
 
+let stripKey = '';
+function paintStrip() {
+  const el = $('strip');
+  if (s.ship && !s.won) {
+    const key = 'ship' + s.ship.from;
+    if (stripKey !== key) { stripKey = key; el.innerHTML = `<button class="ship" id="ship" type="button">${SHIPS[s.ship.kind][0]}<small>${SHIPS[s.ship.kind][1]}</small><i id="shipBar"></i></button>`; }
+    $('shipBar').style.width = Math.max(0, (s.ship.until - s.t) / 9 * 100).toFixed(0) + '%';
+  } else if (s.buff && !s.won) {
+    stripKey = 'buff';
+    el.innerHTML = `<p class="on">${SHIPS[s.buff.kind][2]}，还剩 ${Math.ceil(s.buff.until - s.t)} 秒</p>`;
+  } else if (stripKey !== 'idle') { stripKey = 'idle'; el.innerHTML = '<p>留意靠岸的商船，它们只停几秒。</p>'; }
+}
+
 function buy(kind) {
   if (s.won) return;
   const c = { w: costW, s: costS, k: costK, m: costM }[kind]();
   if (s.money < c) return;
   s.money -= c;
+  sound('buy');
   if (kind === 'w') { s.w++; say('hire'); }
-  if (kind === 's') { s.st++; say(s.st === 18 ? 'full' : 'split'); }
+  if (kind === 's') { s.st++; say(s.st === 18 ? 'full' : 'split'); if (s.st === 18) award('eighteen'); }
   if (kind === 'k') { s.k++; say('machine'); }
   if (kind === 'm') { s.m++; say('market'); }
   paint();
@@ -279,7 +384,7 @@ function renderSlot() {
       <p class="note">${E.q}</p><button class="go" data-go="1" type="button">继续</button></div>`;
   } else if (s.pending >= 0) {
     const E = EVENTS[s.pending];
-    el.innerHTML = `<div class="card"><h2>${E.title}</h2><p>${E.text}</p><div class="opts">${E.opts.map((o, k) => `<button class="opt" data-k="${k}" type="button">${o[0]}</button>`).join('')}</div></div>`;
+    el.innerHTML = `<div class="card"><h2>${E.title}</h2><p>${E.text}</p><div class="opts">${(s.perm.length === E.opts.length ? s.perm : E.opts.map((_, i) => i)).map(k => `<button class="opt" data-k="${k}" type="button">${E.opts[k][0]}</button>`).join('')}</div></div>`;
   } else el.innerHTML = '';
 }
 
@@ -287,12 +392,21 @@ function win() {
   s.won = true;
   const y = years(s.t), old = best(), rec = !old || y < old;
   if (rec) saveBest(y);
-  const right = s.picks.filter((p, i) => p === EVENTS[i].best).length;
+  const right = s.picks.filter((p, i) => p === EVENTS[s.order[i]].best).length;
+  sound('win');
+  award('win');
+  if (y <= 75) award('bronze');
+  if (y <= 55) award('silver');
+  if (y <= 40) award('gold');
+  if (s.picks.length === PER_RUN && right === PER_RUN) award('smith');
+  if (s.picks.length === PER_RUN && right === 0) award('contra');
+  const medal = y <= 40 ? '金章' : y <= 55 ? '银章' : y <= 75 ? '铜章' : '';
+  const chase = y > 75 ? '75 年内拿铜章' : y > 55 ? '55 年内拿银章' : y > 40 ? '40 年内拿金章' : '刷新自己的纪录';
   $('slot').innerHTML = `<div class="card"><h2>每秒 48,000 根。王国富起来了。</h2>
-    <div><div class="big">${y} 年</div><p class="note">${rec ? (old ? `新纪录，原来是 ${old} 年。` : '这是你的第一个纪录。') : `最快纪录是 ${old} 年。`}</p></div>
+    <div><div class="big">${y} 年${medal ? ' · ' + medal : ''}</div><p class="note">${rec ? (old ? `新纪录，原来是 ${old} 年。` : '这是你的第一个纪录。') : `最快纪录是 ${old} 年。`}</p></div>
     <p>你用了 ${s.w} 个工人、${s.st} 道工序、${s.k} 台机器，把市场开到了${s.m < MARKETS.length ? MARKETS[s.m][0] : '海外的新航线'}。让你变富的三样东西，正是《国富论》的主线：分工，市场的大小，把利润变成资本。</p>
-    <div class="recap">${EVENTS.map((E, i) => s.picks[i] === undefined ? '' : `<div><span>${E.title}</span><span class="${s.picks[i] === E.best ? 'ok' : 'no'}">${s.picks[i] === E.best ? '与斯密一致' : '与斯密不同'}</span></div>`).join('')}</div>
-    <p class="note">${s.picks.length} 个抉择里有 ${right} 个和斯密一样。每个抉择都会改变之后的速度，换一种选法再试试能快多少。</p>
+    <div class="recap">${s.picks.map((p, i) => { const E = EVENTS[s.order[i]]; return `<div><span>${E.title}</span><span class="${p === E.best ? 'ok' : 'no'}">${p === E.best ? '与斯密一致' : '与斯密不同'}</span></div>`; }).join('')}</div>
+    <p class="note">${s.picks.length} 个抉择里有 ${right} 个和斯密一样。每一局遇到的抉择和商船都不一样。下一个目标：${chase}。</p>
     <button class="go" data-again="1" type="button">再来一局</button></div>`;
   paint();
   window.scrollTo({ top: 0 });
@@ -300,15 +414,31 @@ function win() {
 
 $('make').onclick = e => {
   if (s.won) return;
+  s.combo = s.t - s.clickT < 0.7 ? Math.min(5, s.combo + 0.25) : 1;
+  s.clickT = s.t;
+  if (s.combo >= 5) award('hands');
   const g = clickGain();
   s.stock += g;
   say('start');
+  sound('click');
   const pop = document.createElement('span');
   pop.className = 'pop';
   pop.textContent = '+' + fmt(g);
   pop.style.left = (20 + Math.random() * 60) + '%';
   $('make').appendChild(pop);
   setTimeout(() => pop.remove(), 700);
+};
+$('mute').onclick = () => { meta.mute = !meta.mute; saveMeta(); paint(); };
+$('strip').onclick = e => {
+  if (!e.target.closest('#ship') || !s.ship || s.won) return;
+  const kind = s.ship.kind;
+  s.caught++;
+  if (kind === 'cash') { const gain = Math.max(20, Math.min(rate(), demand()) * s.price * 40); s.money += gain; s.earned += gain; LESSONS.cash = `<b>订货款到了：</b>${fmt(gain)}。`; s.said = 'cash'; }
+  else s.buff = { kind, until: s.t + 20 };
+  s.ship = null; s.nextShip = s.t + 20 + Math.random() * 25;
+  if (s.caught >= 8) award('ships');
+  sound('buy');
+  paint();
 };
 $('bW').onclick = () => buy('w');
 $('bS').onclick = () => buy('s');
@@ -320,6 +450,7 @@ $('slot').onclick = e => {
   if (b.dataset.k !== undefined && s.pending >= 0) {
     const e2 = s.pending, k = +b.dataset.k;
     EVENTS[e2].opts[k][2](s);
+    sound('pick');
     s.picks.push(k); s.ev++; s.pending = -1; s.shown = { e: e2, k };
   } else if (b.dataset.go) s.shown = null;
   else if (b.dataset.again) { s = fresh(); }
@@ -340,7 +471,7 @@ function start(d) {
 }
 window.claude?.hot?.snapshot?.(() => ({ s }));
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
-window.__game = { get s() { return s; }, step, buy, rate, demand, costs: () => ({ w: costW(), s: costS(), k: costK(), m: costM() }) };
+window.__game = { get s() { return s; }, get meta() { return meta; }, EVENTS, step, buy, rate, demand, costs: () => ({ w: costW(), s: costS(), k: costK(), m: costM() }) };
 </script>
 </body>
 </html>
