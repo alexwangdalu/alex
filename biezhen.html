@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>别针王国</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* 布局：顶上是目标进度；中间一个大按钮亲手做针；下面四样可以买的东西，按钮底色随攒钱进度填满；抉择卡片在需要时插在按钮上方。 */
+:root {
+  --bg: #edf1ec; --fg: #17261f; --muted: #53645b; --panel: #ffffff; --line: #cfd8d1;
+  --gold: #a87400; --goods: #17755a; --bad: #b3372b; --track: #dbe3dc; --fill: #d9efe5;
+  --pick: #17261f; --on-pick: #edf1ec; --quote: #f4f7f3; --warn-bg: #fbeed3;
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-num: "Space Grotesk", "Noto Sans SC", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101814; --fg: #e6eee8; --muted: #9db0a5; --panel: #18231d; --line: #2f3f36;
+    --gold: #e3b341; --goods: #4fc79f; --bad: #ff8a7a; --track: #24332b; --fill: #1f3b30;
+    --pick: #e6eee8; --on-pick: #101814; --quote: #1d2a23; --warn-bg: #3a2f14;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101814; --fg: #e6eee8; --muted: #9db0a5; --panel: #18231d; --line: #2f3f36;
+  --gold: #e3b341; --goods: #4fc79f; --bad: #ff8a7a; --track: #24332b; --fill: #1f3b30;
+  --pick: #e6eee8; --on-pick: #101814; --quote: #1d2a23; --warn-bg: #3a2f14;
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 1rem; line-height: 1.7;
+  padding-block: 16px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; margin: 0; }
+.clock { font-family: var(--font-num); color: var(--muted); font-size: .9rem; margin: 0; font-variant-numeric: tabular-nums; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.goal { display: flex; flex-direction: column; gap: 6px; }
+.goal .row { display: flex; justify-content: space-between; gap: 10px; font-size: .9rem; flex-wrap: wrap; }
+.bar { height: 12px; border-radius: 6px; background: var(--track); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--goods); border-radius: 6px; transition: width .3s; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 6px; text-align: center; min-width: 0; }
+.stat b { display: block; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 1.15rem; line-height: 1.3; }
+.stat span { font-size: .75rem; color: var(--muted); display: block; line-height: 1.3; }
+.stat.money b { color: var(--gold); }
+.stat.glut { background: var(--warn-bg); }
+
+.make {
+  position: relative; border: 0; border-radius: 18px; padding: 18px; width: 100%;
+  background: var(--pick); color: var(--on-pick);
+  font-family: var(--font-display); font-weight: 900; font-size: 1.5rem;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.make:active { transform: scale(.98); }
+.make small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .85rem; opacity: .8; }
+.pop { position: absolute; top: 4px; pointer-events: none; font-family: var(--font-num); font-weight: 700; font-size: 1rem; animation: pop .7s ease-out forwards; }
+@keyframes pop { to { transform: translateY(-34px); opacity: 0; } }
+
+.said { background: var(--quote); border-radius: 12px; padding: 12px 14px; font-size: .95rem; min-height: 3.4em; }
+.said b { font-family: var(--font-display); }
+
+.shop { display: flex; flex-direction: column; gap: 8px; }
+.buy {
+  --p: 0; text-align: left; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 14px;
+  background: linear-gradient(to right, var(--fill) calc(var(--p) * 1%), var(--panel) 0);
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center;
+  touch-action: manipulation;
+}
+.buy .name { font-weight: 700; }
+.buy .what { grid-column: 1; font-size: .85rem; color: var(--muted); }
+.buy .cost { grid-row: 1 / span 2; grid-column: 2; font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gold); }
+.buy.can { border-color: var(--goods); border-width: 2px; }
+.buy:disabled { cursor: default; }
+.buy.max { opacity: .6; }
+
+.card { background: var(--panel); border: 2px solid var(--pick); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; margin: 0; line-height: 1.3; }
+.card .opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { text-align: left; font-weight: 700; border: 1.5px solid var(--line); background: transparent; border-radius: 10px; padding: 10px 12px; }
+.opt:hover { border-color: var(--fg); }
+.go { align-self: flex-end; border: 0; border-radius: 10px; padding: 8px 20px; background: var(--pick); color: var(--on-pick); font-weight: 700; }
+.ok { color: var(--goods); font-weight: 700; } .no { color: var(--bad); font-weight: 700; }
+.big { font-family: var(--font-num); font-weight: 700; font-size: clamp(2.4rem, 11vw, 3.2rem); line-height: 1.1; color: var(--goods); }
+.recap div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .95rem; }
+.note { color: var(--muted); font-size: .875rem; }
+@media (prefers-reduced-motion: reduce) { .pop { display: none; } .bar i { transition: none; } }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="top"><p class="brand">别针王国</p><p class="clock" id="clock"></p></div>
+
+  <div class="goal">
+    <div class="row"><span>目标：全国每秒卖出 <b class="num">48,000</b> 根别针</span><span class="num" id="goalNum"></span></div>
+    <div class="bar"><i id="goalBar"></i></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat money"><b id="sMoney">0</b><span>钱</span></div>
+    <div class="stat"><b id="sRate">0</b><span>每秒做出</span></div>
+    <div class="stat"><b id="sDem">0</b><span>市场每秒买</span></div>
+    <div class="stat" id="stockBox"><b id="sStock">0</b><span>仓库积压</span></div>
+  </div>
+
+  <div id="slot"></div>
+
+  <button class="make" id="make" type="button">做一根针<small id="makeSub">点一下，做一根</small></button>
+
+  <div class="said" id="said" aria-live="polite"></div>
+
+  <div class="shop" id="shop">
+    <button class="buy" id="bW" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
+    <button class="buy" id="bS" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
+    <button class="buy" id="bK" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
+    <button class="buy" id="bM" type="button"><span class="name"></span><span class="cost"></span><span class="what"></span></button>
+  </div>
+  <p class="note">斯密在《国富论》里记下：10 个人分工做针，一天 48,000 根。这里把它搬到了每秒。数值为游戏而编。</p>
+</main>
+
+<script>
+const GOAL = 48000, YEAR = 10; // 10 秒算一年
+const MARKETS = [['本村', 3], ['镇上的集市', 20], ['郡城', 150], ['运河沿线', 1200], ['港口', 10000], ['海外', 60000]];
+const MCOST = [100, 1000, 10000, 100000, 800000];
+const TRIG = [150, 800, 5000, 30000, 150000, 600000];
+
+const EVENTS = [
+  { title: '工人要涨工钱', text: '作坊生意好，到处缺人，工人要求加工钱。', best: 1,
+    opts: [
+      ['联合其他作坊主，把工钱压住', '雇人便宜了三成。吃不饱的工人干得慢，每人产量少了两成。', s => { s.wcost *= 0.7; s.prod *= 0.8; }],
+      ['涨。让各家争着雇人', '雇人贵了一成半。吃得饱的工人更卖力，每人产量多了四分之一。', s => { s.wcost *= 1.15; s.prod *= 1.25; }]
+    ],
+    q: '报酬优厚的工人更勤快。一个绝大部分成员都贫穷的社会，谈不上繁荣。（卷一 第八章）' },
+  { title: '第一笔像样的钱', text: '你攒下了第一笔像样的钱。管家和账房各有主意。', best: 1,
+    opts: [
+      ['办一场全郡闻名的宴会，让人人知道这家作坊', '宴会很风光，花掉了你一半的钱。第二天，产量和昨天一样。', s => { s.money *= 0.5; }],
+      ['一个子儿也不花在排场上，全换成一台新机器', '白得一台机器，产量翻倍。', s => { s.k++; }]
+    ],
+    q: '资本因节俭而增加，因奢侈和妄为而减少。（卷二 第三章）' },
+  { title: '行会的邀请', text: '别针行会请你入伙：大家约好不降价，再请国王下令，只许会员做针。', best: 1,
+    opts: [
+      ['入伙。价钱抬高五成，还有一笔分红', '每根针多卖五成的钱，你还拿到 3,000。可是买得起的人少了四成。', s => { s.money += 3000; s.price *= 1.5; s.dem *= 0.6; }],
+      ['不入。谁想做针都可以', '同行越来越多，大家只能比谁做得更好更便宜。市场反倒大了一成。', s => { s.dem *= 1.1; }]
+    ],
+    q: '同行的人聚在一起，谈话的结果往往是对付公众的合谋，或是抬高价格的办法。（卷一 第十章）' },
+  { title: '银行家的提议', text: '银行家说：金银又重又贵，不如用纸币流通，把金银省下来买原料。', best: 1,
+    opts: [
+      ['只认金银', '一切照旧。', s => {}],
+      ['允许随时能兑回金银的纸币', '省下的金银换成了原料和工具。从此买什么都便宜两成。', s => { s.cost *= 0.8; }],
+      ['让国库自己印，想印多少印多少', '你的钱一下变成了三倍。很快，所有东西的价钱都涨了一半。', s => { s.money *= 3; s.cost *= 1.5; }]
+    ],
+    q: '纸币像在空中开出一条车道，省下了大路；可它悬在代达罗斯的翅膀上，必须管住。（卷二 第二章）' },
+  { title: '金银外流', text: '邻国的布又好又便宜，商人拿金银去换。大臣们说：金银少了，国家在变穷！', best: 1,
+    opts: [
+      ['对外国货征重税，把金银留住', '国库进了 50,000。邻国对你的别针征了同样的税，市场小了三成。', s => { s.money += 50000; s.dem *= 0.7; }],
+      ['随他们买卖', '百姓省下的钱买了更多别的东西，邻国也更愿意买你的别针。市场大了四成。', s => { s.dem *= 1.4; }]
+    ],
+    q: '财富不是金银，而是人民每年能消费的东西。外国货更便宜，就拿自己擅长的去换。（卷四 第一、二章）' },
+  { title: '国库的钱怎么花', text: '国王要动用你四成的钱。三位大臣各有主张。', best: 1,
+    opts: [
+      ['建一座配得上国王的宫殿', '宫殿很壮观。四成的钱花掉了，别的什么也没变。', s => { s.money *= 0.6; }],
+      ['修桥铺路，设法庭，办学校', '四成的钱花掉了。货运得更远，市场大了五成；识字的工人手更巧，产量多了两成。', s => { s.money *= 0.6; s.dem *= 1.5; s.prod *= 1.2; }],
+      ['补贴国王喜欢的丝绸业', '四成的钱花掉了。工人被丝绸坊挖走，别针产量少了一成。', s => { s.money *= 0.6; s.prod *= 0.9; }]
+    ],
+    q: '君主有三件本分：国防，司法，以及没有哪个人肯独自出钱的公共工程和学校。（卷五 第一章）' }
+];
+
+const LESSONS = {
+  start: '<b>开始。</b>先亲手做几根针卖掉，攒够钱就雇人。',
+  hire: '<b>第一个工人。</b>他一个人从拉铁丝做到装针头，和你一样慢。试试把活拆开。',
+  split: '<b>分工。</b>人没有变多，也没有变聪明，只是每人专做一道工序，手更熟，也不用来回换工具。（卷一 第一章）',
+  glut: '<b>仓库堆满了。</b>做得再多，市场也只买得了这么多。分工能走多远，要看市场有多大。去开拓市场。（卷一 第三章）',
+  market: '<b>路通了。</b>买主多了十倍，值得把工序分得更细了。最早富起来的，总是水路方便的地方。（卷一 第三章）',
+  machine: '<b>资本。</b>把赚来的钱变成机器，明年就能做出更多的东西。这比花掉它更能让国家变富。（卷二 第三章）',
+  full: '<b>十八道工序。</b>每个工人的产量是最初的 240 倍。这正是斯密在别针工厂里看到的。（卷一 第一章）'
+};
+
+const $ = id => document.getElementById(id);
+const fresh = () => ({ money: 0, stock: 0, w: 0, st: 1, k: 0, m: 0, prod: 1, dem: 1, cost: 1, wcost: 1, price: 1, earned: 0, t: 0, ev: 0, picks: [], seen: {}, said: 'start', pending: -1, shown: null, won: false });
+let s = fresh();
+
+const rate = () => s.w * 0.25 * Math.pow(240, (s.st - 1) / 17) * Math.pow(2, s.k) * s.prod;
+const baseDem = m => m < MARKETS.length ? MARKETS[m][1] : MARKETS[5][1] * Math.pow(1.5, m - 5);
+const demand = () => baseDem(s.m) * s.dem;
+const costW = () => 8 * Math.pow(1.13, s.w) * s.cost * s.wcost;
+const costS = () => s.st < 18 ? 30 * Math.pow(1.75, s.st - 1) * s.cost : Infinity;
+const costK = () => 400 * Math.pow(5, s.k) * s.cost;
+const costM = () => (s.m < 5 ? MCOST[s.m] : MCOST[4] * Math.pow(3, s.m - 4)) * s.cost;
+const clickGain = () => 1 + 0.1 * rate();
+
+function fmt(n) {
+  if (!isFinite(n)) return '—';
+  if (n >= 1e8) return (n / 1e8).toFixed(n >= 1e9 ? 1 : 2) + '亿';
+  if (n >= 1e4) return (n / 1e4).toFixed(n >= 1e6 ? 0 : 1) + '万';
+  if (n >= 100) return Math.floor(n).toLocaleString('en-US');
+  if (n >= 10 || Number.isInteger(n)) return String(Math.floor(n));
+  return n.toFixed(1);
+}
+const years = t => Math.floor(t / YEAR) + 1;
+function best() { try { const v = +localStorage.getItem('pin-best'); return v > 0 ? v : 0; } catch (e) { return 0; } }
+function saveBest(v) { try { localStorage.setItem('pin-best', String(v)); } catch (e) {} }
+
+function say(key) { if (s.seen[key]) return; s.seen[key] = 1; s.said = key; }
+
+function step(dt) {
+  if (s.won) return;
+  s.t += dt;
+  s.stock += rate() * dt;
+  const sold = Math.min(s.stock, demand() * dt);
+  s.stock -= sold;
+  s.money += sold * s.price;
+  s.earned += sold * s.price;
+  if (s.pending < 0 && !s.shown && s.ev < EVENTS.length && s.earned >= TRIG[s.ev]) { s.pending = s.ev; renderSlot(); }
+  if (rate() > demand() && s.stock > demand() * 20 && s.stock > 30) say('glut');
+  if (Math.min(rate(), demand()) >= GOAL) win();
+}
+
+function setBuy(id, name, what, cost, maxed) {
+  const b = $(id), can = s.money >= cost && !maxed && !s.won;
+  b.children[0].textContent = name;
+  b.children[1].textContent = maxed ? '已到顶' : fmt(Math.ceil(cost));
+  b.children[2].textContent = what;
+  b.className = 'buy' + (can ? ' can' : '') + (maxed ? ' max' : '');
+  b.style.setProperty('--p', maxed ? 0 : Math.min(100, s.money / cost * 100).toFixed(0));
+  b.setAttribute('aria-disabled', can ? 'false' : 'true');
+}
+
+function paint() {
+  const r = rate(), d = demand(), sell = Math.min(r, d);
+  $('clock').textContent = `第 ${years(s.t)} 年` + (best() ? ` · 最快纪录 ${best()} 年` : '');
+  $('goalNum').textContent = `现在 ${fmt(sell)}`;
+  $('goalBar').style.width = Math.min(100, Math.log10(1 + sell) / Math.log10(1 + GOAL) * 100).toFixed(1) + '%';
+  $('sMoney').textContent = fmt(s.money);
+  $('sRate').textContent = fmt(r);
+  $('sDem').textContent = fmt(d);
+  $('sStock').textContent = fmt(s.stock);
+  $('stockBox').className = 'stat' + (r > d && s.stock > d * 5 && s.stock > 10 ? ' glut' : '');
+  $('makeSub').textContent = `点一下，做 ${fmt(clickGain())} 根`;
+  $('said').innerHTML = LESSONS[s.said];
+  setBuy('bW', '雇一个工人', `现有 ${s.w} 人`, costW(), false);
+  setBuy('bS', '多分一道工序', s.st < 18 ? `现在 ${s.st} / 18 道，每人产量再 ×1.38` : '18 道，分到头了', costS(), s.st >= 18);
+  setBuy('bK', '添一台机器', `现有 ${s.k} 台，产量再 ×2`, costK(), false);
+  const next = s.m + 1 < MARKETS.length ? MARKETS[s.m + 1][0] : '又一条新航线';
+  setBuy('bM', `开拓市场：${next}`, `每秒能卖 ${fmt(d)} → ${fmt(baseDem(s.m + 1) * s.dem)}`, costM(), false);
+}
+
+function buy(kind) {
+  if (s.won) return;
+  const c = { w: costW, s: costS, k: costK, m: costM }[kind]();
+  if (s.money < c) return;
+  s.money -= c;
+  if (kind === 'w') { s.w++; say('hire'); }
+  if (kind === 's') { s.st++; say(s.st === 18 ? 'full' : 'split'); }
+  if (kind === 'k') { s.k++; say('machine'); }
+  if (kind === 'm') { s.m++; say('market'); }
+  paint();
+}
+
+function renderSlot() {
+  const el = $('slot');
+  if (s.won) return;
+  if (s.shown) {
+    const E = EVENTS[s.shown.e], good = s.shown.k === E.best;
+    el.innerHTML = `<div class="card"><h2>${E.title}</h2><p>${E.opts[s.shown.k][1]}</p>
+      <p class="${good ? 'ok' : 'no'}">${good ? '斯密也会这么选。' : '斯密会选：' + E.opts[E.best][0] + '。'}</p>
+      <p class="note">${E.q}</p><button class="go" data-go="1" type="button">继续</button></div>`;
+  } else if (s.pending >= 0) {
+    const E = EVENTS[s.pending];
+    el.innerHTML = `<div class="card"><h2>${E.title}</h2><p>${E.text}</p><div class="opts">${E.opts.map((o, k) => `<button class="opt" data-k="${k}" type="button">${o[0]}</button>`).join('')}</div></div>`;
+  } else el.innerHTML = '';
+}
+
+function win() {
+  s.won = true;
+  const y = years(s.t), old = best(), rec = !old || y < old;
+  if (rec) saveBest(y);
+  const right = s.picks.filter((p, i) => p === EVENTS[i].best).length;
+  $('slot').innerHTML = `<div class="card"><h2>每秒 48,000 根。王国富起来了。</h2>
+    <div><div class="big">${y} 年</div><p class="note">${rec ? (old ? `新纪录，原来是 ${old} 年。` : '这是你的第一个纪录。') : `最快纪录是 ${old} 年。`}</p></div>
+    <p>你用了 ${s.w} 个工人、${s.st} 道工序、${s.k} 台机器，把市场开到了${s.m < MARKETS.length ? MARKETS[s.m][0] : '海外的新航线'}。让你变富的三样东西，正是《国富论》的主线：分工，市场的大小，把利润变成资本。</p>
+    <div class="recap">${EVENTS.map((E, i) => s.picks[i] === undefined ? '' : `<div><span>${E.title}</span><span class="${s.picks[i] === E.best ? 'ok' : 'no'}">${s.picks[i] === E.best ? '与斯密一致' : '与斯密不同'}</span></div>`).join('')}</div>
+    <p class="note">${s.picks.length} 个抉择里有 ${right} 个和斯密一样。每个抉择都会改变之后的速度，换一种选法再试试能快多少。</p>
+    <button class="go" data-again="1" type="button">再来一局</button></div>`;
+  paint();
+  window.scrollTo({ top: 0 });
+}
+
+$('make').onclick = e => {
+  if (s.won) return;
+  const g = clickGain();
+  s.stock += g;
+  say('start');
+  const pop = document.createElement('span');
+  pop.className = 'pop';
+  pop.textContent = '+' + fmt(g);
+  pop.style.left = (20 + Math.random() * 60) + '%';
+  $('make').appendChild(pop);
+  setTimeout(() => pop.remove(), 700);
+};
+$('bW').onclick = () => buy('w');
+$('bS').onclick = () => buy('s');
+$('bK').onclick = () => buy('k');
+$('bM').onclick = () => buy('m');
+$('slot').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.k !== undefined && s.pending >= 0) {
+    const e2 = s.pending, k = +b.dataset.k;
+    EVENTS[e2].opts[k][2](s);
+    s.picks.push(k); s.ev++; s.pending = -1; s.shown = { e: e2, k };
+  } else if (b.dataset.go) s.shown = null;
+  else if (b.dataset.again) { s = fresh(); }
+  renderSlot(); paint();
+};
+
+let last = performance.now();
+setInterval(() => {
+  const now = performance.now(), dt = Math.min(1, (now - last) / 1000);
+  last = now;
+  step(dt);
+  paint();
+}, 200);
+
+function start(d) {
+  if (d && d.s && typeof d.s.money === 'number' && Array.isArray(d.s.picks) && !d.s.won) s = Object.assign(fresh(), d.s);
+  renderSlot(); paint();
+}
+window.claude?.hot?.snapshot?.(() => ({ s }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+window.__game = { get s() { return s; }, step, buy, rate, demand, costs: () => ({ w: costW(), s: costS(), k: costK(), m: costM() }) };
+</script>
+</body>
+</html>

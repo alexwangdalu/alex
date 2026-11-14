@@ -3,7 +3,7 @@
 # 用法: bash deploy.sh
 set -euo pipefail
 PROJECT="haoqi-lab"
-PAGES="index.html guofu.html qunlun.html"
+PAGES="index.html guofu.html qunlun.html biezhen.html"
 
 echo "📂 准备发布目录..."
 rm -rf site && mkdir site
@@ -23,4 +23,5 @@ echo ""
 echo "✅ 再问一层     → https://${PROJECT}.pages.dev"
 echo "✅ 首席大臣 1776 → https://${PROJECT}.pages.dev/guofu"
 echo "✅ 群论实验台   → https://${PROJECT}.pages.dev/qunlun"
+echo "✅ 别针王国     → https://${PROJECT}.pages.dev/biezhen"
 echo "（以上面 wrangler 打印的地址为准：项目名被别人占用时，Cloudflare 会给地址加后缀）"
