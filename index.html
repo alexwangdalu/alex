@@ -6,277 +6,383 @@
 <title>再问一层</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* 布局：一个现象，一层一层往下挖。每层的结尾是下一个问题，越深颜色越暗，最底下是没人知道答案的地方。 */
+/* 布局：水面是一张潜点清单；选一个潜点后一层层下潜，每层先猜再揭晓，卡片颜色随深度变暗；潜到底是没人知道答案的地方。 */
 :root {
-  --bg: #f1f5f8;
-  --fg: #0e2233;
-  --muted: #4d6274;
-  --chip: #dde6ee;
+  --bg: #f1f5f8; --fg: #0e2233; --muted: #4d6274; --panel: #ffffff; --line: #d3dde6; --chip: #dde6ee;
   --l1: #d8e8f4; --l1-fg: #0e2233;
   --l2: #a6cae6; --l2-fg: #0b1f30;
   --l3: #23608f; --l3-fg: #ffffff;
   --l4: #0f304e; --l4-fg: #eef5fb;
   --edge: #07182a; --edge-fg: #ffc46b;
+  --star: #b07400; --ok: #12754f; --bad: #b3372b; --ok-on-dark: #7fe0b5; --bad-on-dark: #ffa497;
   --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
   --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-fig: "Space Grotesk", "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-num: "Space Grotesk", "Noto Sans SC", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
-    --l1: #2c4c66; --l1-fg: #f2f7fb;
-    --l2: #213d55; --l2-fg: #eef5fb;
-    --l3: #172e42; --l3-fg: #e8f0f6;
-    --l4: #0f2233; --l4-fg: #e8f0f6;
+    --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --panel: #141f2a; --line: #2a3a49; --chip: #1a2a38;
+    --l1: #2c4c66; --l1-fg: #f2f7fb; --l2: #213d55; --l2-fg: #eef5fb; --l3: #172e42; --l3-fg: #e8f0f6; --l4: #0f2233; --l4-fg: #e8f0f6;
     --edge: #050c13; --edge-fg: #ffc46b;
+    --star: #ffc46b; --ok: #7fe0b5; --bad: #ffa497; --ok-on-dark: #7fe0b5; --bad-on-dark: #ffa497;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
-  --l1: #2c4c66; --l1-fg: #f2f7fb;
-  --l2: #213d55; --l2-fg: #eef5fb;
-  --l3: #172e42; --l3-fg: #e8f0f6;
-  --l4: #0f2233; --l4-fg: #e8f0f6;
+  --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --panel: #141f2a; --line: #2a3a49; --chip: #1a2a38;
+  --l1: #2c4c66; --l1-fg: #f2f7fb; --l2: #213d55; --l2-fg: #eef5fb; --l3: #172e42; --l3-fg: #e8f0f6; --l4: #0f2233; --l4-fg: #e8f0f6;
   --edge: #050c13; --edge-fg: #ffc46b;
+  --star: #ffc46b; --ok: #7fe0b5; --bad: #ffa497; --ok-on-dark: #7fe0b5; --bad-on-dark: #ffa497;
   color-scheme: dark;
 }
-
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  padding-block: 28px 56px;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 1rem; line-height: 1.75;
+  padding-block: 18px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-header { display: flex; flex-direction: column; gap: 6px; }
-.mark { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; margin: 0; }
-.sub { margin: 0; color: var(--muted); }
+main { max-width: 580px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+button:focus-visible { outline: 3px solid var(--edge-fg); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; }
+.mini { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 0 10px; font-size: .8rem; color: var(--muted); }
+.muted { color: var(--muted); font-size: .9rem; }
 
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.tabs button {
-  font: inherit; cursor: pointer; border: 0; border-radius: 999px;
-  padding: 8px 16px; background: var(--chip); color: var(--fg);
-}
-.tabs button[aria-pressed="true"] { background: var(--fg); color: var(--bg); font-weight: 700; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--edge-fg); outline-offset: 2px; }
+.rank { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.rank .row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.rank h1 { font-family: var(--font-display); font-weight: 900; font-size: 1.5rem; margin: 0; line-height: 1.3; }
+.bar { height: 10px; border-radius: 5px; background: var(--chip); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--l3); border-radius: 5px; }
 
-.stack { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; }
-.layer, .ask, .edge { padding: 26px 22px; background: var(--b); color: var(--f); }
-.d1 { --b: var(--l1); --f: var(--l1-fg); }
-.d2 { --b: var(--l2); --f: var(--l2-fg); }
-.d3 { --b: var(--l3); --f: var(--l3-fg); }
-.d4 { --b: var(--l4); --f: var(--l4-fg); }
-.layer { display: flex; flex-direction: column; gap: 14px; }
-.layer.new { animation: sink .5s ease; }
-@keyframes sink { from { opacity: .3; transform: translateY(-10px); } }
+.sites { display: flex; flex-direction: column; gap: 8px; }
+.site { text-align: left; border: 1.5px solid var(--line); background: var(--panel); border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 0 12px; align-items: center; }
+.site:hover:not(:disabled) { border-color: var(--fg); }
+.site b { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; line-height: 1.4; }
+.site .stars { font-size: 1.1rem; color: var(--star); letter-spacing: 2px; white-space: nowrap; }
+.site small { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
+.site:disabled { opacity: .55; cursor: default; border-style: dashed; }
+.rush { border: 0; border-radius: 14px; padding: 14px; background: var(--edge); color: var(--edge-fg); font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; }
+.rush small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .85rem; opacity: .85; }
+.rush:disabled { opacity: .5; cursor: default; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; margin: 8px 0 0; }
+.cards { display: flex; flex-direction: column; gap: 6px; }
+.mystery { border-radius: 12px; padding: 10px 14px; background: var(--edge); color: var(--edge-fg); font-size: .95rem; }
+.mystery.locked { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
 
-.tag { font-family: var(--font-fig); font-size: .8125rem; letter-spacing: .12em; margin: 0; opacity: .8; }
-.layer h1, .layer h2 { font-family: var(--font-display); font-weight: 900; line-height: 1.35; margin: 0; text-wrap: balance; }
-.layer h1 { font-size: clamp(1.75rem, 7vw, 2.25rem); }
-.layer h2 { font-size: 1.375rem; }
-.fig { font-family: var(--font-fig); font-weight: 700; font-size: clamp(1.75rem, 8vw, 2.5rem); line-height: 1.2; margin: 4px 0; font-variant-numeric: tabular-nums; }
-.fig small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .875rem; opacity: .8; margin-top: 4px; }
-.layer p { margin: 0; font-size: 1.0625rem; line-height: 1.85; max-width: 34em; }
-.layer p.tag { font-size: .8125rem; line-height: 1.4; }
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .9rem; }
+.oxy { display: flex; gap: 6px; align-items: center; }
+.oxy i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--l3); background: var(--l2); }
+.oxy i.gone { background: transparent; border-style: dashed; border-color: var(--line); }
+.gauge { display: flex; gap: 4px; }
+.gauge i { flex: 1; height: 8px; border-radius: 4px; background: var(--chip); }
+.gauge i.d1 { background: var(--l1); } .gauge i.d2 { background: var(--l2); } .gauge i.d3 { background: var(--l3); } .gauge i.d4 { background: var(--l4); }
+.gauge i.todo { background: var(--chip); }
 
-.ask {
-  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
-  width: 100%; border: 0; cursor: pointer; text-align: left; font: inherit;
-}
-.ask b { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; line-height: 1.4; }
-.ask:hover b { text-decoration: underline; text-underline-offset: 4px; }
-.edge { --b: var(--edge); --f: var(--edge-fg); display: flex; flex-direction: column; gap: 8px; }
-.edge b { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; line-height: 1.5; text-wrap: balance; }
-
-/* 向日葵实验 */
-.lab { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-.lab canvas { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; }
-.lab input[type="range"] { width: 100%; max-width: 320px; accent-color: currentColor; }
-.lab .read { font-family: var(--font-fig); font-weight: 700; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.lab .presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.lab .presets button {
-  font: inherit; font-size: .9375rem; cursor: pointer; border-radius: 999px; padding: 6px 14px;
-  background: transparent; color: inherit; border: 1.5px solid currentColor;
-}
-
-@media (prefers-reduced-motion: reduce) { .layer.new { animation: none; } }
+.layer { border-radius: 18px; padding: 22px 18px; background: var(--b); color: var(--f); display: flex; flex-direction: column; gap: 14px; animation: sink .4s ease; }
+.layer.d1 { --b: var(--l1); --f: var(--l1-fg); --good: var(--ok); --wrong: var(--bad); }
+.layer.d2 { --b: var(--l2); --f: var(--l2-fg); --good: var(--f); --wrong: var(--f); }
+.layer.d3 { --b: var(--l3); --f: var(--l3-fg); --good: var(--ok-on-dark); --wrong: var(--bad-on-dark); }
+.layer.d4 { --b: var(--l4); --f: var(--l4-fg); --good: var(--ok-on-dark); --wrong: var(--bad-on-dark); }
+.layer.end { --b: var(--edge); --f: var(--edge-fg); }
+@keyframes sink { from { opacity: .3; transform: translateY(-12px); } }
+.tag { font-family: var(--font-num); font-size: .8rem; letter-spacing: .12em; opacity: .85; }
+.layer h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.3rem, 5.5vw, 1.6rem); line-height: 1.4; margin: 0; text-wrap: balance; }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { text-align: left; border: 1.5px solid currentColor; background: transparent; border-radius: 12px; padding: 10px 14px; font-weight: 700; line-height: 1.5; }
+.opt:disabled { cursor: default; opacity: .55; }
+.opt.right { opacity: 1; border-width: 3px; }
+.opt.right::after { content: "　✓ 正确答案"; font-weight: 400; font-size: .85em; }
+.opt.mine.wrong { opacity: 1; text-decoration: line-through; }
+.verdict { font-weight: 700; font-size: 1.05rem; color: var(--good); }
+.verdict.no { color: var(--wrong); }
+.go { align-self: flex-end; border: 0; border-radius: 12px; padding: 10px 22px; background: var(--f); color: var(--b); font-weight: 700; }
+.big { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; line-height: 1.6; text-wrap: balance; }
+.bigstars { font-size: 2rem; letter-spacing: 6px; }
+.rowbtn { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.ghost { border: 1.5px solid currentColor; background: transparent; border-radius: 12px; padding: 9px 18px; }
+@media (prefers-reduced-motion: reduce) { .layer { animation: none; } }
 </style>
 </head>
 <body>
 
-<main>
-  <header>
-    <p class="mark">再问一层</p>
-    <p class="sub">每个答案下面，都还压着一个问题。一直问下去，会走到没人知道答案的地方。</p>
-  </header>
-  <div class="tabs" id="tabs"></div>
-  <div class="stack" id="stack"></div>
-</main>
+<main id="app"></main>
 
 <script>
-const LAB = `<div class="lab">
-  <canvas id="sf" aria-label="按当前角度排出的 500 颗种子"></canvas>
-  <div class="read" id="sfRead"></div>
-  <input type="range" id="sfAngle" min="130" max="145" step="0.1" aria-label="每颗种子转过的角度">
-  <div class="presets"><button type="button" data-a="135">135°（3/8 圈）</button><button type="button" data-a="137.5">137.5°</button><button type="button" data-a="144">144°（2/5 圈）</button></div>
-</div>`;
+// 每一层：[问题, [三个选项], 正确项, 揭晓]
+const SITES = [
+  { name: '天空为什么是蓝的？', layers: [
+    ['天空为什么是蓝的？', ['因为它映出了大海的颜色', '空气分子把蓝光散射得最厉害', '空气本身是一种淡蓝色的气体'], 1,
+      '阳光是所有颜色混在一起的。它撞上空气分子会被弹向四面八方，波长越短弹得越厉害：强度和波长的四次方成反比，蓝光被散射的强度大约是红光的 6 倍。蓝光洒满了天空，红光大多笔直穿了过去。'],
+    ['紫光的波长比蓝光更短。天空为什么不是紫色？', ['紫光全被臭氧层挡住了', '太阳发出的紫光本来就少，眼睛对紫光也很迟钝', '紫光散射太强，全被弹回了太空'], 1,
+      '三件事叠在一起：太阳发出的紫光比蓝光少，高层大气又吸收掉一部分，而你眼睛里的三种视锥细胞对紫光很不敏感。天空射来的是一大堆波长的混合，是大脑把它概括成了一个字：蓝。'],
+    ['那么，“蓝”到底在哪里？', ['在光里：每种波长自带一种颜色', '在空气里：是空气把光染蓝了', '在脑子里：颜色是大脑算出来的'], 2,
+      '光只有波长，没有颜色。把屏幕放大看，黄色的地方只有红色和绿色的小灯在亮，没有一点黄光，你却看见了黄。品红色更彻底：光谱上根本没有对应它的波长。']
+  ], edge: '你看到的蓝，和别人看到的蓝，是同一种感觉吗？至今没有人知道该用什么实验去检验。' },
 
-const topics = [
-  {
-    tab: '天空',
-    q: '天空为什么是蓝的？',
-    layers: [
-      { fig: 'I ∝ 1/λ⁴', note: '散射强度与波长的四次方成反比',
-        p: '阳光是所有颜色混在一起的。它撞上空气分子，会被弹向四面八方，这叫散射。波长越短，散射越强：蓝光（450 nm）被散射的强度大约是红光（700 nm）的 6 倍。于是蓝光洒满了整个天空，而红光大多笔直穿了过去。',
-        ask: '紫光的波长更短，天空为什么不是紫色？' },
-      { p: '三件事叠在一起：太阳发出的紫光本来就比蓝光少；高层大气又吸收掉一部分；最关键的是，你眼睛里的三种视锥细胞对紫光很迟钝。天空射来的其实是一大堆波长的混合，是大脑把它概括成了一个字：蓝。',
-        ask: '那“蓝”到底在哪里？在光里，还是在脑子里？' },
-      { fig: '红 + 绿 = 黄', note: '屏幕上的黄色里，没有一点黄光',
-        p: '光只有波长，没有颜色。颜色是大脑根据三种视锥细胞的信号比例算出来的。把屏幕放大看：黄色的地方只有红色和绿色的小灯在亮，你却看见了黄。品红色更彻底，光谱上根本没有对应它的波长，它完全是大脑造出来的。',
-        edge: '你看到的蓝，和别人看到的蓝，是同一种感觉吗？至今没有人知道该用什么实验去检验。' }
-    ]
-  },
-  {
-    tab: '向日葵',
-    q: '向日葵的种子为什么排成螺旋？',
-    layers: [
-      { fig: '34 · 55 · 89', note: '斐波那契数列：每一项是前两项之和',
-        p: '数一数向日葵花盘上的螺旋：顺时针和逆时针的条数几乎总是 34 和 55，或者 55 和 89。松果是 8 和 13，菠萝是 8、13 和 21。它们全是斐波那契数列里相邻的数。',
-        ask: '植物不会数数，这些数字是哪来的？' },
-      { p: '种子从花盘中心一颗一颗长出来。每一颗都比上一颗多转过一个固定的角度，然后被后来者往外推。植物只做这一件事。下面是 500 颗种子，你来当植物，换个角度试试：', lab: true,
-        ask: '只差 1° 就散架了。为什么偏偏是 137.5°？' },
-      { fig: '360° ÷ φ² ≈ 137.5°', note: 'φ ≈ 1.618，黄金比例',
-        p: '如果每次转的是一圈的简单分数，比如 2/5 圈，那么每 5 颗种子就回到同一个方向，排成 5 条直线，中间全是浪费的空隙。想不留空隙，就得用一个最不像分数的比例。数学上可以证明，最难用分数去逼近的数正是黄金比例 φ。而斐波那契数相邻两项的比值，恰好是 φ 最好的分数近似，所以你数出来的总是它们。',
-        ask: '可植物是怎么“找到”这个角度的？' },
-      { p: '没有谁去找。新的芽点总是长在离旧芽点最远、最空的位置：旧芽点会抽走周围的生长素，新芽只能在剩得最多的地方冒出来。只要反复执行“往最空的地方长”这一条规则，角度就自动收敛到 137.5°。1992 年，两位物理学家让磁性液滴在磁场里互相排斥着落下，得到了一模一样的螺旋。一点生物学都不需要。',
-        edge: '一条简单的局部规则就能长出向日葵。斑马的条纹、你的指纹、大脑的沟回，还有多少形状是这样自己长出来的？' }
-    ]
-  },
-  {
-    tab: '太阳',
-    q: '太阳为什么能亮这么久？',
-    layers: [
-      { fig: '400 万吨 / 秒', note: '太阳每秒变成能量的质量，E = mc²',
-        p: '太阳不是在烧。如果它是一整团煤，几千年就烧完了。它靠的是核聚变：每秒把大约 6 亿吨氢聚变成氦，其中约 400 万吨质量直接消失，变成了光和热。',
-        ask: '质子都带正电，互相排斥。它们怎么撞得到一起？' },
-      { fig: '1500 万 K ≪ 100 亿 K', note: '太阳核心的温度 与 硬闯所需的温度',
-        p: '按经典物理，撞不到。要靠热运动的速度硬冲过电排斥力，大约需要 100 亿度，而太阳核心只有 1500 万度。照这么算，太阳太冷了，根本不该发光。',
-        ask: '那它为什么亮着？' },
-      { p: '量子隧穿。质子不只是一颗小球，也是一团概率波，它有极小的机会直接出现在那堵它翻不过去的墙的另一边。这个机会小到：核心里的一个质子，平均要等上几十亿年才能聚变成功一次。但太阳里有大约 10<sup>57</sup> 个质子，所以每一秒仍有天文数字的反应在发生。',
-        ask: '如果隧穿再容易一点，会怎样？' },
-      { fig: '100 亿年', note: '太阳的寿命，现在刚过一半',
-        p: '太阳会很快把自己烧光。正因为聚变极难发生，它才能稳稳地亮 100 亿年，足够地球上的生命用 40 亿年演化出一个会问这个问题的你。而你身体里的碳、氧、铁，是更早的恒星用同样的办法造出来、又在死亡时撒向太空的。',
-        edge: '这些物理常数为什么恰好是这些数值？稍微改动一点，就既没有恒星，也没有我们。' }
-    ]
-  },
-  {
-    tab: '夜空',
-    q: '夜晚的天为什么是黑的？',
-    layers: [
-      { p: '“因为太阳下山了”并不够。1823 年，天文学家奥伯斯指出一个麻烦：如果宇宙无限大、无限老、到处都有恒星，那么无论你朝哪个方向看，视线最终都会撞上某颗恒星的表面。整个夜空应该和太阳表面一样刺眼。',
-        ask: '远处的星星更暗，这不就解决了吗？' },
-      { fig: '¼ × 4 = 1', note: '每颗暗到四分之一，数量却多到四倍',
-        p: '解决不了。距离加倍，每颗星的亮度降到 1/4；可是那个距离上一层球壳里的星星数量，正好变成 4 倍。两者刚好抵消，每一层贡献的光一样多。无限多层加起来，天空就该亮得没有边。',
-        ask: '那夜空凭什么是黑的？' },
-      { fig: '138 亿年', note: '宇宙的年龄',
-        p: '因为前提错了：宇宙不是无限老。光速有限，我们只能看到 138 亿年之内来得及赶到的光，更远的星光还在路上。况且宇宙在膨胀，远方来的光一路被拉长，变成了眼睛看不见的红外线和微波。',
-        ask: '那些被拉长的光，现在还在吗？' },
-      { fig: '2.725 K', note: '宇宙微波背景的温度',
-        p: '还在。天空的每个方向都有一层微弱的微波，那是宇宙 38 万岁时发出的光，一直走到今天。老式电视没有信号时的雪花点，大约有 1% 就来自它。所以夜空并不是真的黑，它只是亮在你看不见的波段。你抬头看到的黑暗，本身就是宇宙有过一个开端的证据。',
-        edge: '开端之前是什么？“之前”这个词，在那里还有意义吗？' }
-    ]
-  },
-  {
-    tab: '咖啡',
-    q: '热咖啡为什么只会变凉？',
-    layers: [
-      { p: '热量总是从热的地方流向冷的地方，从不反过来。怪的是，能量守恒并不反对反过来：周围的空气把热量还给咖啡，让它自己重新变烫，能量照样一分不差。',
-        ask: '那是哪条定律不允许？' },
-      { p: '没有哪条定律不允许。在微观上，分子碰撞是可逆的：把一段分子互相碰撞的录像倒着放，每一次碰撞依然完全符合物理定律。咖啡自己变烫并非不可能，只是不太可能。',
-        ask: '有多不可能？' },
-      { fig: 'S = k ln W', note: '熵 = 微观排列方式数目的对数（玻尔兹曼）',
-        p: '这是一道数数题。让能量均匀散开的分子排列方式，比让能量集中在杯子里的排列方式多得多。抛 100 枚硬币全是正面的概率约为 10<sup>−30</sup>，而一杯咖啡里有大约 10<sup>25</sup> 个分子。分子只是在随机乱撞，自然就撞进了占压倒多数的那一类状态里。',
-        ask: '所以“时间往前走”，只是概率？' },
-      { p: '很大程度上是。碎掉的杯子不会复原，你记得昨天却不记得明天，背后都是同一件事：熵在增加。但这只是把问题往回推了一步。熵能一直增加到今天，说明宇宙刚开始的时候，熵低得离谱。',
-        edge: '宇宙为什么从一个极其有序的状态开始？这是物理学最大的未解问题之一。' }
-    ]
-  }
+  { name: '冰为什么浮在水上？', layers: [
+    ['几乎所有物质，固体都比自己的液体重，会沉底。冰呢？', ['一样会沉，只是被水流托住了', '反常：冰比水轻大约 9%', '冰和水一样重，靠里面的气泡才浮着'], 1,
+      '水结冰时体积会胀大约 9%，所以冰山总有十分之一左右露在水面上。在常见物质里，这样的反常很少见。'],
+    ['水结成冰，为什么反而膨胀？', ['冰里冻进了空气', '水分子用氢键搭成六角形的空架子，比乱堆着更占地方', '低温让每个水分子自己变大了'], 1,
+      '水分子是弯的，像一个张开约 104.5° 的小角。结冰时每个分子用氢键拉住四个邻居，搭出一个到处是空洞的六角形架子。液态水里分子挤来挤去，反而排得更紧。雪花有六个角，也是这个原因。'],
+    ['水在几度的时候最重？', ['0 ℃', '4 ℃', '100 ℃'], 1,
+      '4 ℃。湖水变冷时，4 ℃ 的水沉到最底下，更冷的水反而浮在上面，所以湖总是从水面开始结冰。'],
+    ['假如冰比水重，世界会怎样？', ['没什么区别，只是看不到冰山了', '湖和海会从底往上冻实，夏天也化不透', '海平面会低一点'], 1,
+      '冰浮在上面，像一床被子盖住了下面的水，鱼可以在 4 ℃ 的湖底过冬。如果冰会下沉，每个冬天新结的冰都沉到晒不到太阳的水底，一年年积起来，高纬度的湖海会冻成实心。']
+  ], edge: '水有几十种这样的反常性质，生命恰好处处依赖它们。换一种液体，生命还能出现吗？我们只见过地球这一个例子。' },
+
+  { name: '夏天为什么热？', layers: [
+    ['夏天为什么比冬天热？', ['夏天地球离太阳更近', '地轴是歪的：夏天阳光更直，白天也更长', '太阳在夏天烧得更旺'], 1,
+      '北半球过夏天的时候，地球其实正处在离太阳最远的位置附近（七月初，约 1.52 亿公里；一月初反而最近，约 1.47 亿公里）。决定冷热的是阳光照下来的角度和白天的长短。'],
+    ['有什么简单的证据能否定“离太阳近”这个说法？', ['夏天的太阳看起来更大', '北京是夏天的时候，悉尼是冬天', '夏天的影子更长'], 1,
+      '如果是距离的缘故，整个地球应该同时过夏天。实际上南北半球的季节正好相反，只有“地轴歪着”能解释。'],
+    ['地轴歪了大约 23.4°。它是怎么歪的？', ['被太阳的引力慢慢拉歪的', '很可能是早期被一颗火星大小的天体撞歪的', '地球自转太快，自己甩歪的'], 1,
+      '目前的主流假说是：45 亿年前，一颗火星大小的天体斜着撞上了年轻的地球。这一撞让地球歪了，撞飞的碎片后来聚成了月亮。'],
+    ['这个倾角会变吗？', ['永远固定不变', '会小幅摆动，大约 4 万年一个来回，冰期的节奏和它有关', '每年都在乱变'], 1,
+      '它在大约 22.1° 到 24.5° 之间缓慢摆动，周期约 4.1 万年，是冰期来去的节拍器之一。摆幅这么小要感谢月亮：没有大卫星的火星，倾角会大幅度地乱晃。']
+  ], edge: '如果没有月亮稳住地轴，地球的气候还能稳定到让复杂生命出现吗？像月亮这样的大卫星，在宇宙里有多罕见？' },
+
+  { name: '向日葵为什么长成螺旋？', layers: [
+    ['向日葵花盘上有两组方向相反的螺旋。它们的条数通常是哪一组？', ['30 和 60', '34 和 55', '每朵都不一样，没有规律'], 1,
+      '几乎总是 34 和 55，或者 55 和 89。松果是 8 和 13，菠萝是 8、13 和 21。它们全是斐波那契数列里相邻的数：每一项是前两项之和。'],
+    ['植物不会数数。这些数字是哪来的？', ['基因里直接写着“34”和“55”', '每颗种子只是比上一颗多转一个固定的角度', '是蜜蜂采蜜时踩出来的'], 1,
+      '种子从花盘中心一颗颗长出来，每颗比上一颗多转 137.5°，然后被后来者往外推。植物只做这一件事，螺旋和那些数字是自己冒出来的。'],
+    ['为什么偏偏是 137.5°？', ['它正好是一圈的八分之三', '它对应一个最不像分数的比例，种子永远排不成直线', '这个角度晒到的太阳最多'], 1,
+      '如果每次转一圈的简单分数，比如 2/5 圈，每 5 颗种子就回到同一方向，排成 5 条直线，中间全是空隙。要不留空隙，就得用最难被分数逼近的比例，也就是黄金比例 φ ≈ 1.618：360° ÷ φ² ≈ 137.5°。斐波那契数相邻两项之比正是 φ 最好的分数近似。'],
+    ['植物是怎么“找到”这个角度的？', ['细胞里有一把专门量角度的尺子', '每个新芽只是长在最空的地方，角度自己就出来了', '靠太阳的方向来校准'], 1,
+      '旧芽点会抽走周围的生长素，新芽只能在剩得最多、也就是最空的地方冒出来。反复执行这一条规则，角度就自动收敛到 137.5°。1992 年，两位物理学家让磁性液滴在磁场里互相排斥着落下，得到了一模一样的螺旋，一点生物学都不需要。']
+  ], edge: '一条简单的局部规则就能长出向日葵。斑马的条纹、你的指纹、大脑的沟回，还有多少形状是这样自己长出来的？' },
+
+  { name: '月亮为什么总是同一面？', layers: [
+    ['我们永远只能看到月亮的同一面。月亮自转吗？', ['不自转', '自转，转一圈的时间恰好等于绕地球一圈', '转得飞快，所以看上去没动'], 1,
+      '月亮每绕地球一圈，自己也正好转一圈，大约 27.3 天，所以总是同一面朝着我们。如果它完全不自转，我们反而能轮流看到它的每一面。'],
+    ['自转和公转的时间分秒不差。这是巧合吗？', ['是巧合', '不是：地球的引力把月亮的自转刹成了这样', '月亮形成的那一刻就是这样'], 1,
+      '地球的引力把月亮拉得微微鼓起。早期月亮转得快，鼓包总想转走，又被地球拽回来，像一只刹车。刹到自转和公转同步为止。这叫潮汐锁定，太阳系的大卫星几乎都被锁住了。'],
+    ['月亮也在对地球做同样的事。地球的一天在怎样变化？', ['越来越短', '越来越长，每一百年长大约 2 毫秒', '一直不变'], 1,
+      '月亮拉起的潮水在摩擦地球，给自转踩刹车。4 亿年前的珊瑚化石上能数出每天长一圈的纹路：那时一年大约有 400 天，一天只有 22 小时左右。'],
+    ['地球越转越慢，丢掉的那份转动去哪了？', ['变成热，消失了', '给了月亮：它每年离我们远大约 3.8 厘米', '传给了太阳'], 1,
+      '阿波罗宇航员在月面留下了反射镜，今天仍然可以从地球打激光上去，测出月亮每年远离约 3.8 厘米。很久以后，月亮在天上会小得盖不住太阳，日全食将不再出现。']
+  ], edge: '最早的生命，是不是在一涨一落的潮汐池里拼出来的？没有月亮，还会有我们吗？' },
+
+  { name: '太阳为什么能亮这么久？', layers: [
+    ['太阳靠什么发光？', ['像一大团煤在燃烧', '核聚变：氢变成氦，一部分质量直接变成了能量', '内部有滚烫的岩浆'], 1,
+      '如果太阳是一整团煤，几千年就烧完了。它每秒把大约 6 亿吨氢聚变成氦，其中约 400 万吨质量直接消失，按 E = mc² 变成了光和热。'],
+    ['质子都带正电，互相排斥。太阳核心有 1500 万度，够它们硬撞到一起吗？', ['够，1500 万度已经热到头了', '不够。按经典物理，大约要 100 亿度', '不用撞，引力会把它们压在一起'], 1,
+      '要靠热运动的速度硬冲过电排斥力，大约需要 100 亿度。太阳核心只有 1500 万度。照经典物理算，太阳太冷了，根本不该发光。'],
+    ['那太阳凭什么亮着？', ['质子有极小的概率，直接“穿过”那堵它翻不过去的墙', '太阳里有一种我们还没发现的燃料', '核心其实远比 1500 万度热'], 0,
+      '这叫量子隧穿。质子不只是一颗小球，也是一团概率波，有极小的机会直接出现在墙的另一边。机会小到核心里的一个质子平均要等几十亿年才成功一次；但太阳里有大约 10 的 57 次方个质子，所以每秒仍有天文数字的反应。'],
+    ['假如隧穿变得容易得多，会怎样？', ['太阳更亮，地球更暖，生命更繁盛', '太阳很快就把自己烧光了', '没什么区别'], 1,
+      '正因为聚变极难发生，太阳才能稳稳地亮 100 亿年，足够地球上的生命用 40 亿年演化出一个会问这个问题的你。你身体里的碳、氧、铁，是更早的恒星用同样的办法造出来、又在死亡时撒向太空的。']
+  ], edge: '这些物理常数为什么恰好是这些数值？稍微改动一点，就既没有恒星，也没有我们。' },
+
+  { name: '镜子为什么只反左右？', layers: [
+    ['镜子里的你左右反了，上下却没反。镜子真的把左右对调了吗？', ['是的，镜子的光学原理就是左右对调', '没有。镜子对调的是前后', '对调了，因为人的两只眼睛是左右排的'], 1,
+      '你举起右手，镜子里举起的那只手仍然在你的右边；你的头在上，镜中人的头也在上。唯一反过来的是前后：你的鼻子朝北，镜中人的鼻子朝南。'],
+    ['那“左右反了”的感觉是哪来的？', ['是我们在脑子里把自己转了半圈、走进镜子去比较', '因为眼睛里成的像本来就是倒的', '因为镜子的玻璃有厚度'], 0,
+      '我们习惯绕着竖直的轴转身去面对别人，于是下意识地用“转过身的自己”去和镜中人比，结果左右对不上。如果你习惯的是倒立着翻过去，就会觉得镜子反的是上下。'],
+    ['镜子里，你的右手成了一只左手。只靠转动，能把一只右手变成左手吗？', ['能，转对角度就行', '在三维空间里永远不能', '在失重的环境里可以'], 1,
+      '这种“和自己的镜像无法重合”的性质叫手性。分子也有手性：同一种分子的两种镜像，一种闻起来是留兰香，另一种是葛缕子。组成你身体的氨基酸几乎全是“左手”的。'],
+    ['那物理定律本身分左右吗？把整个世界换成镜子里的样子，一切规律还完全相同吗？', ['完全相同，大自然不分左右', '不同：有一种基本的力是分左右的', '只有生物才分左右'], 1,
+      '1956 年李政道和杨振宁提出，弱相互作用可能分左右；1957 年吴健雄用钴-60 的衰变实验证实了这一点：电子更多地朝一个方向飞出，而镜子里的世界会朝另一个方向。大自然在最底层是个“左撇子”。']
+  ], edge: '地球生命为什么只用左手型的氨基酸？是一次偶然，还是和弱力的左右不对称有关？没有人知道。' },
+
+  { name: '夜晚的天为什么是黑的？', layers: [
+    ['假如宇宙无限大、无限老、到处都有恒星，夜空应该是什么样？', ['和现在一样黑', '整个天空像太阳表面一样刺眼', '比现在稍微亮一点'], 1,
+      '那样的话，无论朝哪个方向看，视线最终都会撞上某颗恒星的表面。1823 年天文学家奥伯斯指出了这个麻烦：夜空居然是黑的，这件事本身需要解释。'],
+    ['可是越远的星星越暗。这能把黑夜救回来吗？', ['能，足够远的星星暗得可以忽略', '不能：每颗暗到四分之一，数量却多到四倍', '能，星际尘埃会把光挡住'], 1,
+      '距离加倍，每颗星的亮度降到 1/4；但那个距离上一层球壳里的星星数量，正好变成 4 倍。两者刚好抵消，每一层贡献的光一样多。尘埃也救不了：它吸了光会变热，最后自己发起光来。'],
+    ['那夜空到底为什么是黑的？', ['宇宙有年龄，更远的光还在路上；膨胀又把光拉到了看不见的波段', '宇宙里的恒星其实没有多少', '光走得太远会自己熄灭'], 0,
+      '前提错了：宇宙不是无限老，它只有 138 亿岁。光速有限，我们只能看到 138 亿年之内来得及赶到的光。而且宇宙在膨胀，远方来的光一路被拉长，变成了红外线和微波。'],
+    ['那些被拉长的光，现在还在吗？', ['早就散尽了', '还在：天空每个方向都有温度 2.725 K 的微波', '还在，但只在银河的方向'], 1,
+      '这就是宇宙微波背景，是宇宙 38 万岁时发出的光，一直走到今天。老式电视没有信号时的雪花点，大约有 1% 来自它。夜空并不真的黑，它只是亮在你看不见的波段。你看到的黑暗，本身就是宇宙有过开端的证据。']
+  ], edge: '开端之前是什么？“之前”这个词，在那里还有意义吗？' },
+
+  { name: '蜂巢为什么是六边形？', layers: [
+    ['要用墙把平面隔成一样大的格子，哪种形状用的墙最少？', ['正方形', '正六边形', '圆形'], 1,
+      '圆铺不满平面，中间会留缝。能铺满平面的正多边形只有三角形、正方形和六边形，其中六边形的周长最短。蜂蜡很贵：蜜蜂要吃掉好几份蜂蜜，才能分泌出一份蜡。'],
+    ['“六边形最省材料”这件事，人类是什么时候才严格证明的？', ['古希腊', '1999 年', '至今没有证明'], 1,
+      '古希腊人在公元 300 年前后就猜到了，但一直没人能证明“连歪歪扭扭的格子也比不过它”。直到 1999 年，数学家黑尔斯才给出证明。它叫蜂巢猜想。'],
+    ['蜜蜂需要懂几何才能造出六边形吗？', ['需要，它们天生会量 120° 的角', '不一定：挤在一起的圆筒，会自己被拉成六边形', '需要，是蜂王教的'], 1,
+      '2013 年的一项研究发现，蜜蜂起初造的是一个个挤在一起的圆筒；蜂的体温把蜡烘软，蜡像挤在一起的肥皂泡那样流动，自己绷成了六边形。也有研究者认为蜜蜂确实在主动修整，这件事还没有定论。'],
+    ['除了蜂巢，哪里还能看到自己长出来的六边形？', ['没有了，只有生物会造', '肥皂泡、玄武岩石柱、土星的北极', '只有晶体里有'], 1,
+      '熔岩冷却收缩，会裂成整齐的六边形石柱；挤在一起的肥皂泡交界处是 120°；土星北极有一个比地球还宽的六边形风暴。它们背后是同一件事：系统会滑向最省的那种排法。']
+  ], edge: '大自然为什么总在“省”？光走最省时间的路，肥皂泡取最小的面积。最小作用量原理为什么成立，没有人知道更深的理由。' },
+
+  { name: '热咖啡为什么只会变凉？', layers: [
+    ['一杯咖啡自己从空气里吸热，变得更烫。这违反能量守恒吗？', ['违反', '不违反', '只有在真空里才不违反'], 1,
+      '空气把热量还给咖啡，能量照样一分不差。能量守恒并不反对这件事，可它从来不发生。'],
+    ['把一段分子互相碰撞的录像倒着放。物理学家能看出它是倒放的吗？', ['能，倒放的碰撞违反物理定律', '看不出：每一次碰撞倒过来依然合法', '温度高的时候才看得出'], 1,
+      '在微观上，分子碰撞是可逆的。没有哪条定律禁止咖啡自己变烫，它并非不可能，只是不太可能。'],
+    ['既然不违法，咖啡为什么从不自己变烫？', ['其实有一条专门的定律禁止它', '只是概率：让能量散开的排列方式，多得不可想象', '空气分子太轻，推不动咖啡'], 1,
+      '这是一道数数题。抛 100 枚硬币全是正面的概率约为 10 的负 30 次方，而一杯咖啡里有大约 10 的 25 次方个分子。分子只是随机乱撞，自然就撞进了占压倒多数的那类状态。这个“排列方式的数目”取对数，就是熵：S = k ln W。'],
+    ['那么“时间只往前走”这件事，根子在哪里？', ['在微观定律里：它们本来就区分过去和未来', '在宇宙的开端：它是从熵极低的状态出发的', '在人的意识里：时间只是错觉'], 1,
+      '碎掉的杯子不会复原，你记得昨天却不记得明天，背后都是熵在增加。可熵能一直增加到今天，说明宇宙刚开始的时候，熵低得离谱。']
+  ], edge: '宇宙为什么从一个极其有序的状态开始？这是物理学最大的未解问题之一。' }
 ];
 
+const RANKS = [[0, '岸边的人'], [800, '浮潜者'], [2500, '潜水员'], [5000, '深潜员'], [9000, '深渊探索者'], [15000, '海沟常客'], [30000, '住在海底的人']];
 const $ = id => document.getElementById(id);
-let t = 0, shown = topics.map(() => 1), angle = 137.5;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-function drawSeeds() {
-  const c = $('sf');
-  if (!c) return;
-  const size = c.clientWidth || 300, dpr = window.devicePixelRatio || 1;
-  c.width = c.height = Math.round(size * dpr);
-  const ctx = c.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.fillStyle = getComputedStyle(c).color;
-  const N = 500, R = size / 2 - 5, a = angle * Math.PI / 180;
-  for (let k = 1; k <= N; k++) {
-    const r = R * Math.sqrt(k / N);
-    ctx.beginPath();
-    ctx.arc(size / 2 + r * Math.cos(k * a), size / 2 + r * Math.sin(k * a), size / 115, 0, 7);
-    ctx.fill();
-  }
-  $('sfRead').textContent = angle.toFixed(1) + '°';
+let meta = { stars: {}, depth: 0, streak: 0, bestStreak: 0, rushBest: 0, mute: false };
+try { const m = JSON.parse(localStorage.getItem('zaiwen-meta') || 'null'); if (m && typeof m === 'object') meta = Object.assign(meta, m, { stars: Object.assign({}, m.stars) }); } catch (e) {}
+const save = () => { try { localStorage.setItem('zaiwen-meta', JSON.stringify(meta)); } catch (e) {} };
+
+let view = 'home', dive = null, rush = null;
+const doneCount = () => SITES.filter((_, i) => meta.stars[i] > 0).length;
+const unlocked = i => i < 3 + doneCount();
+const rankOf = d => RANKS.filter(r => r[0] <= d).pop();
+const starStr = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+const mult = () => Math.min(5, 1 + Math.max(0, meta.streak - 1) * 0.5);
+
+let actx = null;
+function sound(kind) {
+  if (meta.mute) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const up = Math.min(meta.streak, 8) * 40;
+    const notes = { right: [[523 + up, .08], [784 + up, .12]], wrong: [[220, .12], [165, .2]], end: [[392, .12], [523, .12], [659, .12], [784, .12], [1047, .35]], tap: [[440, .05]] }[kind];
+    let t = actx.currentTime;
+    for (const [f, d] of notes) {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d); t += d * .9;
+    }
+  } catch (e) {}
 }
 
-function render(scrollToNew) {
-  const topic = topics[t], n = shown[t];
-  $('tabs').innerHTML = topics.map((x, i) => `<button type="button" data-i="${i}" aria-pressed="${i === t}">${x.tab}</button>`).join('');
-  let html = '';
-  for (let i = 0; i < n; i++) {
-    const L = topic.layers[i];
-    const head = i === 0 ? `<h1>${topic.q}</h1>` : `<h2>${topic.layers[i - 1].ask}</h2>`;
-    html += `<section class="layer d${i + 1}${scrollToNew && i === n - 1 ? ' new' : ''}">
-      <p class="tag">第 ${i + 1} 层</p>${head}
-      ${L.fig ? `<div class="fig">${L.fig}<small>${L.note}</small></div>` : ''}
-      <p>${L.p}</p>${L.lab ? LAB : ''}</section>`;
-  }
-  const last = topic.layers[n - 1];
-  html += last.ask
-    ? `<button class="ask d${n + 1}" id="ask" type="button"><span class="tag">再问一层 ↓</span><b>${last.ask}</b></button>`
-    : `<div class="edge"><span class="tag">已知的边缘</span><b>${last.edge}</b></div>`;
-  $('stack').innerHTML = html;
-
-  if ($('sfAngle')) {
-    $('sfAngle').value = angle;
-    $('sfAngle').oninput = e => { angle = +e.target.value; drawSeeds(); };
-    document.querySelectorAll('.presets button').forEach(b => b.onclick = () => { angle = +b.dataset.a; $('sfAngle').value = angle; drawSeeds(); });
-    drawSeeds();
-  }
-  if ($('ask')) $('ask').onclick = () => { shown[t]++; render(true); };
-  if (scrollToNew) {
-    const el = document.querySelector('.layer.new');
-    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (el) el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
-  }
+function topBar(extra) {
+  return `<div class="top"><span class="brand">再问一层</span><span style="display:flex;gap:8px;align-items:center">${extra || ''}<button class="mini" data-act="mute" type="button">${meta.mute ? '声音：关' : '声音：开'}</button></span></div>`;
 }
 
-$('tabs').onclick = e => {
+function renderHome() {
+  const r = rankOf(meta.depth), next = RANKS[RANKS.indexOf(r) + 1];
+  const pct = next ? (meta.depth - r[0]) / (next[0] - r[0]) * 100 : 100;
+  const totalStars = SITES.reduce((t, _, i) => t + (meta.stars[i] || 0), 0);
+  const done = doneCount();
+  $('app').innerHTML = topBar() + `
+    <div class="rank">
+      <div class="row"><h1>${r[1]}</h1><span class="num">${Math.round(meta.depth).toLocaleString('en-US')} 米</span></div>
+      <div class="bar"><i style="width:${pct.toFixed(0)}%"></i></div>
+      <div class="row muted"><span>${next ? `再潜 ${Math.ceil(next[0] - meta.depth).toLocaleString('en-US')} 米成为「${next[1]}」` : '已经到了最深的称号'}</span><span>${starStr(0).replace(/☆/g, '') || ''}<span class="num">${totalStars}</span> / 30 星　连对纪录 <span class="num">${meta.bestStreak}</span></span></div>
+    </div>
+    <p class="muted">每个答案下面都还压着一个问题。先猜，再揭晓；连着猜对，下潜得越来越快。潜到底，是没人知道答案的地方。</p>
+    <div class="sites">${SITES.map((s, i) => {
+      const st = meta.stars[i] || 0, open = unlocked(i);
+      return `<button class="site" data-site="${i}" type="button" ${open ? '' : 'disabled'}><b>${open ? s.name : '还没发现的潜点'}</b><span class="stars">${open ? starStr(st) : ''}</span><small>${open ? (st ? (st === 3 ? '满氧到底' : '到过底，再潜一次争取三星') : `${s.layers.length} 层，还没到过底`) : '再潜到一个底就会出现'}</small></button>`;
+    }).join('')}</div>
+    <button class="rush" data-act="rush" type="button" ${done >= 2 ? '' : 'disabled'}>连击挑战<small>${done >= 2 ? `从你到过底的潜点里随机出题，错一题就结束。纪录：连对 ${meta.rushBest}` : '先潜到两个底，这里才会打开'}</small></button>
+    <h2>没人知道答案的问题　<span class="num">${done}</span> / ${SITES.length}</h2>
+    <div class="cards">${SITES.map((s, i) => meta.stars[i] > 0 ? `<div class="mystery">${s.edge}</div>` : `<div class="mystery locked">${unlocked(i) ? '潜到「' + s.name + '」的底才能看到' : '？？？'}</div>`).join('')}</div>`;
+}
+
+function startDive(i) { dive = { t: i, i: 0, oxy: 3, pick: null, perm: shuffle([0, 1, 2]), gained: 0, stage: 'q' }; view = 'dive'; render(); }
+
+function renderDive() {
+  const S = SITES[dive.t], n = S.layers.length;
+  const hud = `<div class="hud"><button class="mini" data-act="home" type="button">回水面</button>
+    <span class="oxy">氧气 ${[0, 1, 2].map(k => `<i class="${k < dive.oxy ? '' : 'gone'}"></i>`).join('')}</span>
+    <span>连对 <span class="num">${meta.streak}</span>　下潜速度 <span class="num">×${mult().toFixed(1)}</span></span></div>
+    <div class="gauge">${S.layers.map((_, k) => `<i class="${k <= dive.i && dive.stage !== 'out' ? 'd' + Math.min(4, k + 1) : 'todo'}"></i>`).join('')}</div>`;
+  let body;
+  if (dive.stage === 'end') {
+    const first = dive.firstTime;
+    body = `<section class="layer end"><span class="tag">已知的边缘 · ${S.name}</span>
+      <p class="big">${S.edge}</p>
+      <p class="bigstars">${starStr(dive.oxy)}</p>
+      <p>${dive.oxy === 3 ? '满氧到底，一题没错。' : `到底了，路上猜错 ${3 - dive.oxy} 次。再潜一次可以争取三星。`}这一趟下潜 <span class="num">${Math.round(dive.gained)}</span> 米。${first && doneCount() < SITES.length ? '水面上多了一个新的潜点。' : ''}${first && doneCount() === 2 ? '连击挑战也打开了。' : ''}</p>
+      <div class="rowbtn">${dive.oxy < 3 ? '<button class="ghost" data-act="again" type="button">再潜一次</button>' : ''}<button class="go" data-act="home" type="button">回水面</button></div></section>`;
+  } else if (dive.stage === 'out') {
+    body = `<section class="layer d1"><span class="tag">氧气用完了</span><h1>这次只能先上浮。</h1><p>刚才看到的答案都还算数，再下去一次会顺利得多。</p>
+      <div class="rowbtn"><button class="ghost" data-act="home" type="button">回水面</button><button class="go" data-act="again" type="button">再潜一次</button></div></section>`;
+  } else {
+    const L = S.layers[dive.i], d = Math.min(4, dive.i + 1), picked = dive.pick !== null;
+    const good = dive.pick === L[2];
+    body = `<section class="layer d${d}"><span class="tag">第 ${dive.i + 1} 层 / 共 ${n} 层</span><h1>${L[0]}</h1>
+      <div class="opts">${dive.perm.map(k => `<button class="opt${picked && k === L[2] ? ' right' : ''}${picked && k === dive.pick ? ' mine' + (good ? '' : ' wrong') : ''}" data-k="${k}" type="button" ${picked ? 'disabled' : ''}>${L[1][k]}</button>`).join('')}</div>
+      ${picked ? `<p class="verdict${good ? '' : ' no'}">${good ? `猜对了，下潜 ${Math.round(dive.lastGain)} 米。` : '猜错了，少了一格氧气。'}</p><p>${L[3]}</p>
+        <button class="go" data-act="next" type="button">${dive.oxy <= 0 ? '上浮' : dive.i + 1 < n ? '再问一层' : '潜到底'}</button>` : '<p class="tag">先猜一个</p>'}</section>`;
+  }
+  $('app').innerHTML = topBar() + hud + body;
+}
+
+function answerDive(k) {
+  const L = SITES[dive.t].layers[dive.i];
+  dive.pick = k;
+  if (k === L[2]) {
+    meta.streak++; meta.bestStreak = Math.max(meta.bestStreak, meta.streak);
+    dive.lastGain = 100 * mult(); dive.gained += dive.lastGain; meta.depth += dive.lastGain;
+    sound('right');
+  } else { meta.streak = 0; dive.oxy--; sound('wrong'); }
+  save(); render();
+}
+function nextDive() {
+  const S = SITES[dive.t];
+  if (dive.oxy <= 0) dive.stage = 'out';
+  else if (dive.i + 1 < S.layers.length) { dive.i++; dive.pick = null; dive.perm = shuffle([0, 1, 2]); }
+  else {
+    dive.stage = 'end'; dive.firstTime = !meta.stars[dive.t];
+    meta.stars[dive.t] = Math.max(meta.stars[dive.t] || 0, dive.oxy);
+    save(); sound('end');
+  }
+  render(); window.scrollTo({ top: 0 });
+}
+
+function rushPool() { return SITES.flatMap((s, t) => meta.stars[t] > 0 ? s.layers.map((_, i) => [t, i]) : []); }
+function startRush() { rush = { run: 0, pool: shuffle(rushPool()), cur: null, pick: null, perm: [], over: false }; nextRush(); view = 'rush'; render(); }
+function nextRush() {
+  if (!rush.pool.length) rush.pool = shuffle(rushPool());
+  rush.cur = rush.pool.pop(); rush.pick = null; rush.perm = shuffle([0, 1, 2]);
+}
+function renderRush() {
+  const [t, i] = rush.cur, L = SITES[t].layers[i], picked = rush.pick !== null, good = rush.pick === L[2];
+  const d = Math.min(4, 1 + Math.floor(rush.run / 3));
+  $('app').innerHTML = topBar() + `<div class="hud"><button class="mini" data-act="home" type="button">回水面</button><span>连击挑战</span><span>连对 <span class="num">${rush.run}</span>　纪录 <span class="num">${meta.rushBest}</span></span></div>
+    <section class="layer d${d}"><span class="tag">${SITES[t].name}</span><h1>${L[0]}</h1>
+    <div class="opts">${rush.perm.map(k => `<button class="opt${picked && k === L[2] ? ' right' : ''}${picked && k === rush.pick ? ' mine' + (good ? '' : ' wrong') : ''}" data-k="${k}" type="button" ${picked ? 'disabled' : ''}>${L[1][k]}</button>`).join('')}</div>
+    ${rush.over ? `<p class="verdict no">断了。这次连对 ${rush.run} 题${rush.newBest ? '，新纪录' : ''}。</p><p>${L[3]}</p>
+      <div class="rowbtn"><button class="ghost" data-act="home" type="button">回水面</button><button class="go" data-act="rush" type="button">再来一次</button></div>` : picked ? '<p class="verdict">对。</p>' : '<p class="tag">错一题就结束</p>'}</section>`;
+}
+function answerRush(k) {
+  if (rush.pick !== null) return;
+  const [t, i] = rush.cur, L = SITES[t].layers[i];
+  rush.pick = k;
+  if (k === L[2]) {
+    rush.run++; meta.streak++; meta.bestStreak = Math.max(meta.bestStreak, meta.streak); meta.depth += 50;
+    rush.newBest = rush.run > meta.rushBest; if (rush.newBest) meta.rushBest = rush.run;
+    save(); sound('right'); render();
+    const mine = rush;
+    setTimeout(() => { if (view === 'rush' && rush === mine && !rush.over) { nextRush(); render(); } }, 550);
+  } else { rush.over = true; rush.newBest = rush.run > 0 && rush.run >= meta.rushBest; meta.streak = 0; save(); sound('wrong'); render(); }
+}
+
+function render() { view === 'home' ? renderHome() : view === 'dive' ? renderDive() : renderRush(); }
+
+$('app').onclick = e => {
   const b = e.target.closest('button');
-  if (!b) return;
-  t = +b.dataset.i;
-  render(false);
+  if (!b || b.disabled) return;
+  const act = b.dataset.act;
+  if (b.dataset.site !== undefined) { sound('tap'); startDive(+b.dataset.site); window.scrollTo({ top: 0 }); }
+  else if (b.dataset.k !== undefined) { view === 'dive' ? (dive.pick === null && answerDive(+b.dataset.k)) : answerRush(+b.dataset.k); }
+  else if (act === 'next') nextDive();
+  else if (act === 'again') startDive(dive.t);
+  else if (act === 'home') { view = 'home'; render(); window.scrollTo({ top: 0 }); }
+  else if (act === 'rush') { sound('tap'); startRush(); window.scrollTo({ top: 0 }); }
+  else if (act === 'mute') { meta.mute = !meta.mute; save(); render(); }
 };
-window.addEventListener('resize', drawSeeds);
 
 function start(d) {
-  if (Number.isInteger(d.t) && topics[d.t]) t = d.t;
-  if (Array.isArray(d.shown) && d.shown.length === topics.length) shown = d.shown.map((v, i) => Math.min(Math.max(1, v | 0), topics[i].layers.length));
-  if (typeof d.angle === 'number') angle = d.angle;
-  render(false);
+  if (d && d.view === 'dive' && d.dive && SITES[d.dive.t]) { dive = d.dive; view = 'dive'; }
+  render();
 }
-window.claude?.hot?.snapshot?.(() => ({ t, shown, angle }));
+window.claude?.hot?.snapshot?.(() => ({ view: view === 'dive' ? 'dive' : 'home', dive }));
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+window.__game = { SITES, get meta() { return meta; }, get dive() { return dive; }, get rush() { return rush; } };
 </script>
 </body>
 </html>
