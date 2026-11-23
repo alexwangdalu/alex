@@ -1,0 +1,615 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>黎曼猜想图解</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;900&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column hung beside a vertical axis (the critical line); figures are wide plates that break out of the column; side notes sit in the right margin. */
+:root {
+  /* ground + ink (light: a cool journal plate) */
+  --bg: #f3f5f8;
+  --surface: #fbfcfd;
+  --surface-2: #e8ecf2;
+  --ink: #0f1420;
+  --ink-2: #3c4557;
+  --ink-3: #6a7386;
+  --hair: #dde2ea;
+  --axis: #b3bbc8;
+  /* series: one colour per mathematical object, the same everywhere on the page */
+  --prime: #2a6fd6;   /* primes, pi(x) */
+  --zero: #c77a00;    /* zeros of zeta, the critical line */
+  --smooth: #0f9a7a;  /* smooth laws: Li(x), x/ln x */
+  --rmt: #6b4fd8;     /* random matrices (never drawn beside --prime) */
+  --bad: #d8404c;     /* the hypothetical zero off the line */
+  --ghost: #9aa3b3;   /* context series */
+  --glow: #b56c00;    /* text-safe gold for emphasis */
+  /* type */
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, sans-serif;
+  --font-latin: "STIX Two Text", "Times New Roman", "Noto Serif SC", serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --t-xs: 0.75rem; --t-sm: 0.8125rem; --t-md: 0.9375rem; --t-body: 1.0625rem; --t-lg: 1.25rem; --t-xl: 1.625rem; --t-2xl: 2.25rem;
+  /* measure */
+  --col: 40rem;
+  --page: 72rem;
+  --gap: 1.5rem;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0d16; --surface: #111624; --surface-2: #1a2135; --ink: #e8ecf4; --ink-2: #b4bdcc; --ink-3: #8590a4; --hair: #222b3e; --axis: #3a455c;
+    --prime: #4d93f0; --zero: #c2861a; --smooth: #1fa583; --rmt: #8d7cf0; --bad: #e25563; --ghost: #5d687c; --glow: #f0b343;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0d16; --surface: #111624; --surface-2: #1a2135; --ink: #e8ecf4; --ink-2: #b4bdcc; --ink-3: #8590a4; --hair: #222b3e; --axis: #3a455c;
+  --prime: #4d93f0; --zero: #c2861a; --smooth: #1fa583; --rmt: #8d7cf0; --bad: #e25563; --ghost: #5d687c; --glow: #f0b343;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.85;
+  font-feature-settings: "palt" 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+h1, h2, h3, p, figure, ul, ol, dl, dd, blockquote { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; text-decoration-color: var(--axis); text-underline-offset: 0.2em; }
+a:hover { text-decoration-color: var(--zero); }
+:focus-visible { outline: 2px solid var(--zero); outline-offset: 3px; border-radius: 3px; }
+button, input { font: inherit; color: inherit; }
+::selection { background: var(--zero); color: var(--surface); }
+
+/* Latin letters, numerals and inline maths in running text */
+.m, i.v { font-family: var(--font-latin); font-style: italic; font-size: 1.06em; letter-spacing: 0.01em; }
+.n { font-family: var(--font-latin); font-style: normal; font-size: 1.06em; font-variant-numeric: lining-nums; }
+.tex { display: inline-block; vertical-align: baseline; white-space: nowrap; }
+.tex svg { display: inline-block; font-size: 1.05em; }
+.formula { margin-block: 1.5rem; overflow-x: auto; overflow-y: hidden; text-align: center; padding-block: 0.25rem; color: var(--ink); }
+.formula svg { font-size: 1.12em; max-width: none; }
+.formula-note { display: block; font-size: var(--t-sm); color: var(--ink-3); margin-top: 0.6rem; text-align: center; }
+
+/* ---------- page frame ---------- */
+.wrap {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 48rem) { .wrap > * { margin-inline: 1rem; } }
+
+/* ---------- hero ---------- */
+.hero { padding-block: 3.5rem 2.5rem; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; align-items: center; }
+@media (min-width: 62rem) { .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 3rem; } }
+.eyebrow { font-family: var(--font-data); font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 1.25rem; }
+.hero h1 {
+  font-family: var(--font-display); font-weight: 900; line-height: 1.08; letter-spacing: 0.02em;
+  font-size: clamp(3.25rem, 9vw, 6rem); text-wrap: balance;
+}
+.hero-thesis { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.3rem, 2.6vw, 1.75rem); line-height: 1.5; margin-top: 1.25rem; text-wrap: balance; }
+.hero-lede { margin-top: 1.5rem; color: var(--ink-2); max-width: 32rem; }
+.hero-facts { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--hair); }
+.hero-facts div { min-width: 0; }
+.hero-facts dt { font-size: var(--t-xs); color: var(--ink-3); letter-spacing: 0.06em; }
+.hero-facts dd { font-family: var(--font-data); font-size: var(--t-md); font-variant-numeric: tabular-nums; }
+.hero-fig { min-width: 0; }
+.hero-fig figcaption { margin-top: 0.75rem; }
+
+/* ---------- chapters ---------- */
+.chapter { padding-block: 3.5rem 1rem; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--gap); }
+.chapter > * { min-width: 0; }
+.ch-mark { font-family: var(--font-display); font-weight: 900; font-size: var(--t-lg); color: var(--ink-3); line-height: 1.2; }
+.ch-mark b { display: block; font-size: 3rem; font-weight: 900; color: var(--zero); line-height: 1; }
+.chapter h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.75rem, 4.6vw, var(--t-2xl)); line-height: 1.25; letter-spacing: 0.01em; text-wrap: balance; }
+.ch-lede { font-family: var(--font-display); font-weight: 600; font-size: var(--t-lg); line-height: 1.6; color: var(--ink-2); margin-top: 0.75rem; text-wrap: pretty; }
+.prose { display: grid; row-gap: 1.15rem; max-width: var(--col); }
+.prose p { text-wrap: pretty; }
+.prose strong { font-weight: 700; }
+.prose h3 { font-family: var(--font-display); font-weight: 900; font-size: var(--t-xl); line-height: 1.35; margin-top: 1rem; text-wrap: balance; }
+.asides { display: grid; row-gap: 1.1rem; max-width: var(--col); }
+.aside { font-size: var(--t-sm); line-height: 1.7; color: var(--ink-2); border-left: 2px solid var(--zero); padding-left: 0.9rem; }
+.aside b { display: block; color: var(--ink); font-weight: 700; margin-bottom: 0.15rem; }
+@media (min-width: 62rem) {
+  .chapter { grid-template-columns: 6.5rem minmax(0, var(--col)) minmax(0, 1fr); column-gap: 2.5rem; }
+  .chapter > .ch-mark { grid-column: 1; grid-row: 1; padding-top: 0.35rem; }
+  .chapter > .ch-head, .chapter > .prose, .chapter > .statement, .chapter > .formula, .chapter > .takeaway { grid-column: 2; }
+  .chapter > .plate, .chapter > .wide { grid-column: 1 / -1; }
+  .chapter > .asides { grid-column: 3; align-self: start; max-width: 17rem; }
+}
+
+/* the conjecture itself */
+.statement { border-block: 1px solid var(--ink); padding-block: 1.5rem; max-width: var(--col); }
+.statement .st-label { font-family: var(--font-data); font-size: var(--t-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+.statement p { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.35rem, 3.4vw, 1.9rem); line-height: 1.5; margin-top: 0.5rem; text-wrap: balance; }
+.statement .tex svg { font-size: 1em; }
+
+/* ---------- plates (figures) ---------- */
+.plate { background: var(--surface); border: 1px solid var(--hair); border-radius: var(--radius); padding: 1.25rem 1rem 1rem; display: grid; row-gap: 1rem; }
+@media (min-width: 40rem) { .plate { padding: 1.75rem 1.75rem 1.5rem; } }
+.plate > * { min-width: 0; }
+.plate-head { display: grid; row-gap: 0.35rem; max-width: 46rem; }
+.plate-no { font-family: var(--font-data); font-size: var(--t-xs); letter-spacing: 0.12em; color: var(--ink-3); }
+.plate-title { font-family: var(--font-body); font-weight: 700; font-size: var(--t-lg); line-height: 1.45; text-wrap: balance; }
+.plate-sub { font-size: var(--t-md); color: var(--ink-2); line-height: 1.7; }
+figcaption, .fig-note { font-size: var(--t-sm); color: var(--ink-3); line-height: 1.7; max-width: 46rem; }
+.fig-note:empty { display: none; }
+.fig-body { display: grid; row-gap: 0.85rem; min-width: 0; }
+.fig-body > * { min-width: 0; }
+.fig-error { color: var(--bad); font-size: var(--t-md); }
+.stage { position: relative; min-width: 0; }
+.cv { display: block; width: 100%; }
+
+/* controls: one row above the stage */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+.controls:empty, .legend:empty { display: none; }
+.ctl { display: flex; align-items: center; gap: 0.6rem; font-size: var(--t-sm); color: var(--ink-2); min-width: 0; }
+.ctl-label { white-space: nowrap; }
+.ctl-slider { flex: 1 1 16rem; max-width: 30rem; }
+.ctl-val { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--ink); min-width: 4.5em; text-align: right; white-space: nowrap; }
+input[type="range"] { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 5rem; height: 1.75rem; background: transparent; cursor: pointer; --fill: 0%; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--zero) var(--fill), var(--axis) var(--fill)); }
+input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--axis); }
+input[type="range"]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--zero); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--zero); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--zero); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+.btn { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.25rem; padding: 0.3rem 0.95rem; border-radius: 999px; border: 1px solid var(--axis); background: transparent; color: var(--ink); font-size: var(--t-sm); font-weight: 500; line-height: 1.2; cursor: pointer; white-space: nowrap; transition: background-color 0.15s, border-color 0.15s; }
+.btn:hover { border-color: var(--ink-2); background: var(--surface-2); }
+.btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-primary:hover { background: var(--ink-2); border-color: var(--ink-2); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 999px; padding: 2px; gap: 2px; }
+.seg-btn { border: 0; background: transparent; color: var(--ink-2); font-size: var(--t-sm); min-height: 1.85rem; padding: 0.15rem 0.8rem; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.seg-btn:hover { color: var(--ink); }
+.seg-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* legend + keys */
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; font-size: var(--t-sm); color: var(--ink-2); }
+.lg { display: inline-flex; align-items: center; gap: 0.45rem; }
+.lg-key { display: inline-block; flex: none; width: 18px; height: 0; border-top: 2px solid var(--k); }
+.lg-key.lg-dash { border-top-style: dashed; }
+.lg-key.lg-rect { width: 10px; height: 10px; border: 0; border-radius: 2px; background: var(--k); }
+.lg-key.lg-dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--k); }
+.readout { font-family: var(--font-data); font-size: var(--t-sm); font-variant-numeric: tabular-nums; color: var(--ink-2); line-height: 1.6; white-space: pre-wrap; }
+
+/* tooltip */
+.tip { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 4px; padding: 0.45rem 0.65rem; font-size: var(--t-xs); line-height: 1.55; max-width: 16rem; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+.tip-title { font-weight: 700; margin-bottom: 0.15rem; }
+.tip-row { display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.tip-v { font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+.tip-k { opacity: 0.72; }
+
+/* data table twin */
+details.table-view { font-size: var(--t-sm); color: var(--ink-2); }
+details.table-view summary { cursor: pointer; color: var(--ink-3); width: fit-content; }
+details.table-view summary:hover { color: var(--ink); }
+.table-scroll { overflow-x: auto; margin-top: 0.75rem; }
+table.data { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--t-sm); min-width: 100%; }
+table.data th, table.data td { text-align: right; padding: 0.3rem 0.75rem; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+table.data th { font-weight: 500; color: var(--ink-3); }
+table.data th:first-child, table.data td:first-child { text-align: left; padding-left: 0; }
+table.data td { font-family: var(--font-data); }
+
+/* ---------- the critical-line rail (desktop only) ---------- */
+.rail { display: none; }
+@media (min-width: 86rem) {
+  .rail { display: block; position: fixed; z-index: 3; left: max(1.25rem, calc((100vw - var(--page)) / 2 - 4.5rem)); top: 0; bottom: 0; width: 3.5rem; pointer-events: none; }
+}
+
+/* ---------- recurring text devices ---------- */
+.q { font-size: var(--t-md); color: var(--ink-2); }
+.q b { font-family: var(--font-data); font-size: var(--t-xs); font-weight: 500; letter-spacing: 0.1em; color: var(--ink-3); margin-right: 0.6em; }
+.takeaway { max-width: var(--col); border-top: 1px solid var(--hair); padding-top: 1rem; font-family: var(--font-display); font-weight: 600; font-size: var(--t-lg); line-height: 1.6; text-wrap: pretty; }
+.takeaway b { font-family: var(--font-data); font-size: var(--t-xs); font-weight: 500; letter-spacing: 0.1em; color: var(--ink-3); display: block; margin-bottom: 0.2rem; }
+
+/* three-sentence version */
+.tldr { padding-block: 1.5rem 0.5rem; }
+.tldr-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.75rem; border-block: 1px solid var(--ink); padding-block: 1.75rem; }
+@media (min-width: 52rem) { .tldr-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2.5rem; } }
+.tldr-grid > div { display: grid; row-gap: 0.5rem; align-content: start; min-width: 0; }
+.tldr-grid h2 { font-family: var(--font-display); font-weight: 900; font-size: var(--t-xl); line-height: 1.3; }
+.tldr-grid p { font-size: var(--t-md); line-height: 1.8; color: var(--ink-2); }
+.tldr-k { font-family: var(--font-data); font-size: var(--t-xs); letter-spacing: 0.12em; color: var(--ink-3); }
+
+/* dated status of the proof */
+.status { border: 1px solid var(--ink); border-radius: var(--radius); padding: 1.25rem 1rem; display: grid; row-gap: 1.1rem; }
+@media (min-width: 40rem) { .status { padding: 1.5rem 1.75rem; } }
+.status-date { font-family: var(--font-data); font-size: var(--t-xs); letter-spacing: 0.1em; color: var(--ink-3); }
+.status-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+@media (min-width: 52rem) { .status-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; } }
+.status-grid > div { display: grid; row-gap: 0.4rem; align-content: start; min-width: 0; }
+.status-grid h3 { font-size: var(--t-md); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+.status-grid h3 i { flex: none; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink-2); }
+.status-grid h3 i.on { background: var(--zero); border-color: var(--zero); }
+.status-grid p { font-size: var(--t-sm); line-height: 1.75; color: var(--ink-2); }
+
+/* cautionary tales */
+.tales { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem 2.25rem; }
+.tale { display: grid; row-gap: 0.45rem; align-content: start; border-top: 1px solid var(--ink); padding-top: 0.9rem; min-width: 0; }
+.tale h3 { font-size: var(--t-md); font-weight: 700; line-height: 1.5; }
+.tale p { font-size: var(--t-sm); line-height: 1.75; color: var(--ink-2); }
+.tale .tale-n { font-family: var(--font-data); font-size: var(--t-lg); color: var(--ink); font-variant-numeric: lining-nums; }
+
+/* timeline: dots strung on a line */
+.timeline { position: relative; display: grid; row-gap: 1rem; max-width: 50rem; padding-left: 1.5rem; }
+.timeline::before { content: ""; position: absolute; left: 4px; top: 0.6rem; bottom: 0.6rem; width: 1px; background: var(--zero); opacity: 0.55; }
+.timeline li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; }
+@media (min-width: 40rem) { .timeline li { grid-template-columns: 7.5rem minmax(0, 1fr); column-gap: 1rem; align-items: baseline; } }
+.timeline li::before { content: ""; position: absolute; left: calc(-1.5rem + 1px); top: 0.72em; width: 7px; height: 7px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--zero); }
+.timeline li.key::before { background: var(--zero); }
+.timeline time { font-family: var(--font-data); font-size: var(--t-sm); color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeline p { font-size: var(--t-md); line-height: 1.75; color: var(--ink-2); }
+.timeline p b { color: var(--ink); font-weight: 700; }
+
+/* sources + colophon */
+.sources { display: grid; row-gap: 0.5rem; font-size: var(--t-sm); color: var(--ink-2); line-height: 1.7; max-width: 50rem; }
+.sources li { padding-left: 1rem; text-indent: -1rem; overflow-wrap: anywhere; }
+.sources li::before { content: "·"; display: inline-block; width: 1rem; text-indent: 0; color: var(--ink-3); }
+.colophon { font-size: var(--t-sm); color: var(--ink-3); line-height: 1.8; max-width: 50rem; }
+.closing { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.25rem, 3vw, 1.6rem); line-height: 1.65; max-width: var(--col); text-wrap: pretty; }
+.footer { padding-block: 2.5rem 4rem; }
+@media (min-width: 62rem) { .chapter > .q, .chapter > .closing, .chapter > .colophon { grid-column: 2; } .chapter > .q { margin-top: -0.5rem; } }
+
+</style>
+
+<div class="rail" data-fig="rail" aria-hidden="true"></div>
+
+<main class="wrap" lang="zh-CN">
+
+<header class="hero">
+  <div class="hero-grid">
+    <div class="hero-text">
+      <span class="eyebrow">Bernhard Riemann · 1859 — 2026</span>
+      <h1>黎曼猜想</h1>
+      <p class="hero-thesis">质数看似杂乱无章，背后却有一份乐谱。黎曼猜想说：这支乐队里，没有一件乐器会盖过别人。</p>
+      <p class="hero-lede">这句话写于 1859 年，此后 167 年没有人能证明。2026 年 11 月 20 日，一份由计算机逐行检验的证明公布了。下面用十二张可以动手的图讲清三件事：它说了什么，为什么重要，证明它意味着什么。</p>
+      <dl class="hero-facts">
+        <div><dt>提出</dt><dd>1859 年 11 月</dd></div>
+        <div><dt>悬赏</dt><dd>100 万美元</dd></div>
+        <div><dt>现状（2026-11-23）</dt><dd>机器检验通过，人类评审中</dd></div>
+      </dl>
+    </div>
+    <figure class="hero-fig" data-fig="hero" id="fig-hero">
+      <div class="fig-body"></div>
+      <figcaption>一个点沿着左边的直线向上走，右边的曲线记录函数 ζ 在这一点的取值。曲线每穿过中心一次，就找到一个“零点”。读到第二节，你会回来看懂这张图。</figcaption>
+    </figure>
+  </div>
+</header>
+
+<section class="tldr" aria-label="三句话版本">
+  <div class="tldr-grid">
+    <div>
+      <span class="tldr-k">它说了什么</span>
+      <h2>所有零点排成一条线</h2>
+      <p>有一个函数叫 ζ（读作 zeta），它把全体质数的信息装在了一起。让它等于 0 的点叫零点。黎曼猜想断言：除了一批无关紧要的以外，所有零点都落在同一条竖直的直线上。</p>
+    </div>
+    <div>
+      <span class="tldr-k">为什么重要</span>
+      <h2>它决定质数有多“听话”</h2>
+      <p>每个零点对应质数分布里的一道波。零点都在线上，等于说没有哪道波特别响，质数的起伏只有抛硬币那么大。数论里大量结论，都以“假设黎曼猜想成立”开头。</p>
+    </div>
+    <div>
+      <span class="tldr-k">证明意味着什么</span>
+      <h2>先有了“对”，还没有“为什么”</h2>
+      <p>2026 年 11 月公布的证明有约 1,700 万行机器代码，检验程序认定它正确，却还没有人读懂。密码不会因此失效。改变的是一批定理的地位，以及数学家做数学的方式。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 一 ============================== -->
+<section class="chapter" id="primes">
+  <div class="ch-mark"><b>一</b></div>
+  <div class="ch-head"><h2>质数：近看混乱，远看守纪</h2><p class="ch-lede">质数的密度早就清楚了。难的是密度之外的那点起伏。</p></div>
+  <div class="prose">
+    <p>质数（也叫素数）是只能被 1 和它自己整除的数：2、3、5、7、11、13……任何整数都能拆成质数的乘积，而且拆法只有一种，所以质数是整数的原子。两千多年前，欧几里得就证明了质数有无穷多个。</p>
+    <p>可它们的位置看不出规律。7 之后是 11，89 之后却要等到 97。近看，质数像随手撒在数轴上的种子。</p>
+    <p>退远了看，疏密却很有章法。高斯十五六岁时翻着质数表数出了规律：在 <span class="m">x</span> 附近，大约每 ln <span class="m">x</span> 个数里有一个质数。把这个密度从 2 一路累加到 <span class="m">x</span>，得到一条光滑的曲线 Li(<span class="m">x</span>)，用它来估计不超过 <span class="m">x</span> 的质数个数 π(<span class="m">x</span>)。1896 年，阿达马和德拉瓦莱普桑各自证明：数得越远，这个估计在比例上越准。这就是素数定理。</p>
+  </div>
+  <div class="asides">
+    <p class="aside"><b>π(x) 和圆周率无关</b>它只是“不超过 x 的质数个数”的记号。π(10) = 4，因为 10 以内有 2、3、5、7 四个质数。</p>
+    <p class="aside"><b>ln x 有多大</b>自然对数 ln x 大致和 x 的位数成正比。在一个 100 位的数附近，平均每 230 个数里才有一个质数。</p>
+  </div>
+  <figure class="plate" data-fig="stairs" id="fig-stairs">
+    <header class="plate-head"><span class="plate-no">图 1</span><h3 class="plate-title">近看是参差的台阶，远看是一条光滑的曲线</h3><p class="plate-sub">拖动滑块，把数轴从 30 一直拉远到一千万。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>台阶是真实的质数个数 π(x)，每遇到一个质数就上一级。Li(x) 是高斯的估计，x / ln x 是更粗糙的版本。数到一百万时，Li(x) 只多估了大约 130 个。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>素数定理只管平均趋势。真实的台阶始终围着曲线上下摆动。摆动有多大？受什么支配？黎曼猜想回答的就是这个问题。</p>
+  </div>
+</section>
+
+<!-- ============================== 二 ============================== -->
+<section class="chapter" id="zeta">
+  <div class="ch-mark"><b>二</b></div>
+  <div class="ch-head"><h2>一座桥：ζ 函数</h2><p class="ch-lede">一个函数装下了全部质数，它的要害是让它等于零的那些点。</p></div>
+  <div class="prose">
+    <p>1737 年，欧拉发现了一个奇怪的等式。左边把所有正整数都用上，右边只用质数：</p>
+  </div>
+  <div class="formula"><div class="formula"><svg class="mjx mjx-block" role="img" aria-label="zeta 函数等于对所有正整数 n 求 n 的 s 次方分之一的和，也等于对所有质数 p 求一减 p 的负 s 次方分之一的乘积" style="vertical-align: -1.516ex;" xmlns="http://www.w3.org/2000/svg" width="69.281ex" height="4.261ex" viewBox="0 -1315 33185.7 2041"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g><g><path d="M273 750C211 710 186 682 186 645C186 591 242 570 263 569L263 566C156 488 50 396 50 225C50-37 291 57 291-65C291-124 210-137 138-137C118-137 93-135 73-133L73-146C73-173 87-220 145-220C220-221 335-151 335-33C335 152 89 66 89 233C89 369 247 482 340 547C428 585 453 589 460 595C464 601 468 618 466 641C465 667 459 687 448 687C424 687 373 650 299 595C272 608 253 627 253 656C253 687 264 708 291 733Z"></path></g><g transform="translate(478,0) translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(835,0)"><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g><g transform="translate(1221,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g><g transform="translate(1578,0)"></g><g transform="translate(2133.8,0)"><path d="M658 327L658 395L62 395L62 327M658 123L658 190L62 190L62 123Z"></path></g><g transform="translate(2853.8,0)"></g><g transform="translate(3409.6,0)"><g transform="translate(398,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g><rect width="1050.9" height="68" x="120" y="216"></rect></g><g transform="translate(4922.7,0)"><path d="M658 225L658 293L396 293L396 558L324 558L324 293L62 293L62 225L324 225L324-40L396-40L396 225Z"></path></g><g transform="translate(5864.9,0)"><g transform="translate(398,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M464 160L435 160C412 100 399 79 346 79L207 79L137 76L137 81L269 206C375 313 432 382 432 471C432 576 353 644 240 644C143 644 75 588 44 491L68 481C105 556 149 579 214 579C291 579 339 531 339 456C339 351 289 288 190 186L38 34L38 0L432 0Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g><rect width="1050.9" height="68" x="120" y="216"></rect></g><g transform="translate(7378.1,0)"><path d="M658 225L658 293L396 293L396 558L324 558L324 293L62 293L62 225L324 225L324-40L396-40L396 225Z"></path></g><g transform="translate(8320.3,0)"><g transform="translate(398,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M86 498C120 551 157 579 217 579C279 579 319 545 319 486C319 405 248 350 180 350L161 350L161 312L181 312C277 312 362 253 362 164C362 66 301 37 238 37C214 37 200 41 157 63C122 81 114 86 98 86C72 86 59 63 59 42C59 16 81-13 171-13C317-13 444 57 444 194C444 283 377 336 297 361L297 364C360 404 405 441 405 510C405 586 346 644 244 644C162 644 100 598 63 511Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g><rect width="1050.9" height="68" x="120" y="216"></rect></g><g transform="translate(9833.5,0)"><path d="M658 225L658 293L396 293L396 558L324 558L324 293L62 293L62 225L324 225L324-40L396-40L396 225Z"></path></g><g transform="translate(10775.7,0)"><g transform="translate(398,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M481 158L481 227L379 227L379 645L318 645L13 221L13 158L290 158L290 0L379 0L379 158M290 227L68 227L68 231L286 536L290 536Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g><rect width="1050.9" height="68" x="120" y="216"></rect></g><g transform="translate(12288.9,0)"><path d="M658 225L658 293L396 293L396 558L324 558L324 293L62 293L62 225L324 225L324-40L396-40L396 225Z"></path></g><g transform="translate(13231.1,0)"><path d="M219 258C219 290 199 318 159 318C120 318 100 292 100 258C100 224 118 199 158 199C199 199 219 225 219 258M536 258C536 290 516 318 476 318C437 318 417 292 417 258C417 224 435 199 475 199C516 199 536 225 536 258M853 258C853 290 833 318 793 318C754 318 734 292 734 258C734 224 752 199 792 199C833 199 853 225 853 258Z"></path></g><g transform="translate(14184.1,0)"></g><g transform="translate(14739.9,0)"><path d="M658 327L658 395L62 395L62 327M658 123L658 190L62 190L62 123Z"></path></g><g transform="translate(15459.9,0)"></g><g transform="translate(16015.7,0)"><g transform="translate(1482.3,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(717.2,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(1659.4,0)"><g><path d="M464 160L435 160C412 100 399 79 346 79L207 79L137 76L137 81L269 206C375 313 432 382 432 471C432 576 353 644 240 644C143 644 75 588 44 491L68 481C105 556 149 579 214 579C291 579 339 531 339 456C339 351 289 288 190 186L38 34L38 0L432 0Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(720,0)"><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g></g><rect width="3219.5" height="68" x="120" y="216"></rect></g><g transform="translate(19697.4,0)"><path d="M208 259C208 292 180 320 147 320C113 320 85 290 85 259C85 228 113 197 147 197C180 197 208 226 208 259Z"></path></g><g transform="translate(20212.6,0)"><g transform="translate(1482.3,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(717.2,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(1659.4,0)"><g><path d="M86 498C120 551 157 579 217 579C279 579 319 545 319 486C319 405 248 350 180 350L161 350L161 312L181 312C277 312 362 253 362 164C362 66 301 37 238 37C214 37 200 41 157 63C122 81 114 86 98 86C72 86 59 63 59 42C59 16 81-13 171-13C317-13 444 57 444 194C444 283 377 336 297 361L297 364C360 404 405 441 405 510C405 586 346 644 244 644C162 644 100 598 63 511Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(720,0)"><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g></g><rect width="3219.5" height="68" x="120" y="216"></rect></g><g transform="translate(23894.3,0)"><path d="M208 259C208 292 180 320 147 320C113 320 85 290 85 259C85 228 113 197 147 197C180 197 208 226 208 259Z"></path></g><g transform="translate(24409.6,0)"><g transform="translate(1482.3,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(717.2,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(1659.4,0)"><g><path d="M417 549L433 630L159 630L97 369L109 354C123 354 128 354 154 352C292 345 370 304 370 179C370 75 307 37 236 37C172 37 139 86 99 86C74 86 59 66 59 43C59 6 97-13 174-13C333-13 443 65 443 219C443 376 320 423 202 432L155 435L182 549Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(720,0)"><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g></g><rect width="3219.5" height="68" x="120" y="216"></rect></g><g transform="translate(28091.3,0)"><path d="M208 259C208 292 180 320 147 320C113 320 85 290 85 259C85 228 113 197 147 197C180 197 208 226 208 259Z"></path></g><g transform="translate(28606.5,0)"><g transform="translate(1482.3,676)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-686)"><g><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(717.2,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(1659.4,0)"><g><path d="M464 599L464 630L82 630L42 477L73 474C100 539 108 549 164 549L387 549L151-8L230-8Z"></path></g><g transform="translate(528,289) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(720,0)"><path d="M378 479L359 479L333 452L330 452C318 459 281 479 228 479C137 479 92 425 92 357C92 295 139 260 180 221C218 185 254 150 254 96C254 44 222 23 176 23C108 23 82 69 72 156L47 156L21-11L43-11L67 16L70 16C84 10 122-11 185-11C298-11 337 55 337 113C337 177 301 214 258 260C214 307 163 343 163 385C163 414 184 449 236 449C295 449 328 400 331 323L355 323Z"></path></g></g></g></g><rect width="3219.5" height="68" x="120" y="216"></rect></g><g transform="translate(32232.7,0)"><path d="M219 258C219 290 199 318 159 318C120 318 100 292 100 258C100 224 118 199 158 199C199 199 219 225 219 258M536 258C536 290 516 318 476 318C437 318 417 292 417 258C417 224 435 199 475 199C516 199 536 225 536 258M853 258C853 290 833 318 793 318C754 318 734 292 734 258C734 224 752 199 792 199C833 199 853 225 853 258Z"></path></g></g></g></svg></div></div>
+  <div class="prose">
+    <p>把右边的每个因子展开再乘起来，每个整数恰好出现一次，因为每个整数只有一种质因数分解。这个等式把全体质数打包进了一个函数 ζ(<span class="m">s</span>)。想审问质数，可以去审问这个函数。</p>
+  </div>
+  <figure class="plate" data-fig="euler" id="fig-euler">
+    <header class="plate-head"><span class="plate-no">图 2</span><h3 class="plate-title">对所有整数求和，等于只对质数求积</h3><p class="plate-sub">取 <span class="m">s</span> = 2，两边各用上不超过 N 的数，它们奔向同一个值。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>两边的极限都是 π²/6 ≈ 1.6449。求和要加很多项才靠近，乘积只用几个质数就追上来了。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>欧拉只让 <span class="m">s</span> 取实数。1859 年，黎曼迈出关键一步：让 <span class="m">s</span> 取复数。复数可以看成平面上的一个点，往右走是实部，往上走是虚部。</p>
+    <p>麻烦在于，上面的求和只有当 <span class="m">s</span> 的实部大于 1 时才加得出结果。黎曼证明，ζ 可以延伸到整个平面，延伸的方式只有一种，只在 <span class="m">s</span> = 1 这一点趋于无穷。可以这样理解：1 + <span class="m">x</span> + <span class="m">x</span>² + … 只在 |<span class="m">x</span>| &lt; 1 时加得出结果，但它等于 1/(1 − <span class="m">x</span>)，而后者几乎处处能算。原来的求和只是一扇小窗，窗外的全景本来就在那里。</p>
+    <p>延伸之后，ζ 在一些点上恰好等于 0，这些点叫<strong>零点</strong>。负偶数 −2、−4、−6…… 是一批，来历简单，叫平凡零点。其余的零点全都挤在实部介于 0 和 1 之间的一条窄带里，叫<strong>非平凡零点</strong>。它们才是主角。</p>
+  </div>
+  <div class="asides">
+    <p class="aside"><b>“1 + 2 + 3 + … = −1/12”？</b>这句流行的话说的是延伸之后 ζ(−1) = −1/12。它不表示这些正数真的加出了一个负数。</p>
+  </div>
+  <figure class="plate" data-fig="map" id="fig-map">
+    <header class="plate-head"><span class="plate-no">图 3</span><h3 class="plate-title">ζ 函数的地图：暗点就是零点，它们排成一列</h3><p class="plate-sub">图上每个位置是一个复数 <span class="m">s</span>。颜色表示 ζ(<span class="m">s</span>) 的方向，明暗表示它的大小，越暗越接近 0。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>沿着金色的直线向上走，零点一个接一个出现，没有一个偏到线外。这条直线叫临界线，它的实部是 ½。把滑块拉回 0，可以看到横轴上的平凡零点和 s = 1 处的极点。</figcaption>
+  </figure>
+  <figure class="plate" data-fig="profile" id="fig-profile">
+    <header class="plate-head"><span class="plate-no">图 4</span><h3 class="plate-title">沿竖线切一刀：只有在临界线上，ζ 的大小才会降到 0</h3><p class="plate-sub">把竖线从 Re(<span class="m">s</span>) = ½ 向右挪，看曲线如何离开横轴。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>这张图只画到高度 60。计算机已经严格检查到高度 3 × 10¹²，线外从未出现过零点。开头那张图里曲线一次次穿过中心，画的是同一件事。</figcaption>
+  </figure>
+  <div class="statement"><span class="st-label">黎曼猜想 · 1859</span><p>ζ 函数的所有非平凡零点，实部都等于 <span class="tex"><svg class="mjx" aria-hidden="true" style="vertical-align: -0.72ex;" xmlns="http://www.w3.org/2000/svg" width="1.649ex" height="2.486ex" viewBox="0 -845.8 790 1190.8"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g><g><g transform="translate(220,394) scale(0.707)"><path d="M426 0L426 28C334 28 297 46 297 95L297 639L268 639L74 584L74 551C105 561 156 567 176 567C201 567 209 553 209 518L209 95C209 45 174 28 80 28L80 0Z"></path></g><g transform="translate(220,-345) scale(0.707)"><path d="M464 160L435 160C412 100 399 79 346 79L207 79L137 76L137 81L269 206C375 313 432 382 432 471C432 576 353 644 240 644C143 644 75 588 44 491L68 481C105 556 149 579 214 579C291 579 339 531 339 456C339 351 289 288 190 186L38 34L38 0L432 0Z"></path></g><rect width="550" height="68" x="120" y="216"></rect></g></g></g></svg></span>。</p></div>
+  <div class="prose">
+    <p>黎曼亲手算出了最初几个零点，发现它们都在这条线上。他在论文里只留下几句话，大意是：这对所有零点“很可能”都成立，严格的证明当然值得追求，我试了几次没有成功，暂且搁下，因为眼下的目标用不着它。</p>
+  </div>
+</section>
+
+<!-- ============================== 三 ============================== -->
+<section class="chapter" id="music">
+  <div class="ch-mark"><b>三</b></div>
+  <div class="ch-head"><h2>零点是音符</h2><p class="ch-lede">每个零点贡献一道波。把它们叠起来，光滑的曲线长出质数的台阶。</p></div>
+  <div class="prose">
+    <p>一个函数往往由它的零点决定。多项式 (<span class="m">x</span> − 1)(<span class="m">x</span> − 2)(<span class="m">x</span> − 3) 就是这样：知道它在 1、2、3 处为零，就几乎知道了它的全部。ζ 有两种写法。欧拉把它写成关于质数的乘积，黎曼发现它也能写成关于零点的乘积。同一个函数，两张身份证。</p>
+    <p>把两种写法对照起来，黎曼得到一个精确的公式：</p>
+  </div>
+  <div class="formula"><div class="formula"><svg class="mjx mjx-block" role="img" aria-label="质数个数等于一个光滑的主项，减去对所有非平凡零点求和的波动项" style="vertical-align: -5.491ex;" xmlns="http://www.w3.org/2000/svg" width="55.745ex" height="7.396ex" viewBox="0 -912.5 26702.1 3542.9"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g><g><path d="M625 473C571 469 513 467 451 467C380 468 324 472 252 472C157 472 90 442 48 354L70 339C113 391 135 392 242 392C218 307 189 249 137 169C88 93 76 77 31 14L31 0L126 0C167 68 258 285 281 391C330 391 375 389 424 388C383 277 326 154 326 68C326 26 343-9 391-9C452-9 494 20 527 69L514 86C497 73 479 61 444 61C412 61 405 94 405 121C405 197 452 339 468 387C493 386 507 386 522 386C589 386 622 436 627 461Z"></path></g><g transform="translate(634,0) translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(991,0)"><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g><g transform="translate(1550,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g><g transform="translate(1907,0)"></g><g transform="translate(2462.8,0)"><path d="M658 327L658 395L62 395L62 327M658 123L658 190L62 190L62 123Z"></path></g><g transform="translate(3182.8,0)"></g><g transform="translate(3738.6,0)"><g data-mjx-texclass="OP" transform="translate(1174.8,0)"><g><g><g><path d="M579 519C579 616 497 657 357 657L122 657L116 627C196 627 202 608 191 553L103 124C86 40 71 30-3 30L-9 0L267 0L272 30C186 30 175 41 192 124L229 302L250 302C286 302 299 296 314 268C345 207 366 165 441 0L593 0L599 30C553 30 529 41 507 81C425 236 405 287 369 312L369 317C456 332 579 378 579 519M292 615C315 617 325 618 351 618C450 618 480 569 480 515C480 387 387 342 267 338L236 339Z"></path></g><g transform="translate(620,0) translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(977,0)"><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g><g transform="translate(1536,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g></g><g transform="translate(61.5,-265)"><path d="M898-300C904-255 959-202 1070-202C1174-202 1353-235 1477-235C1685-235 1770-150 1770-53L1737-53C1737-110 1673-162 1511-162C1404-162 1298-132 1148-132C987-132 911-169 874-231L869-231C839-169 747-132 604-132C444-132 398-162 255-162C122-162 34-110 34-53L0-53C0-150 85-235 288-235C412-235 583-202 674-202C790-202 846-255 848-300Z"></path></g></g></g><g transform="translate(0,-1260.3) scale(0.707)" data-mjx-texclass="ORD"><g><text data-variant="normal" transform="scale(1,-1)" font-size="958px" font-family="serif">光滑的主旋律</text></g></g></g><g transform="translate(7981.2,0)"></g><g transform="translate(8425.9,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(9145.9,0)"></g><g transform="translate(9590.5,0)"><g data-mjx-texclass="OP" transform="translate(1013.9,0)"><g><g><g><g transform="translate(0 -6.5)"><path d="M1047 0L998 0C942-192 906-284 754-284L183-284L183-278L639 316L639 336L224 851L224 856L666 856C862 856 932 824 959 596L1004 596L990 919L29 919L29 888L526 280L15-380L15-406L968-406Z"></path></g><g transform="translate(362.6,-1012.5) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M122 104L130 104C143 54 175-11 249-11C387-11 495 133 495 307C496 432 433 481 362 481C213 481 124 383 71 141C48 42 27-80-5-213L8-216C100-216 103-155 109-45C111-3 114 47 122 104M147 191C148 333 259 395 338 395C390 395 446 371 446 273C446 148 355 71 254 71C194 71 147 103 147 191Z"></path></g></g></g><g transform="translate(1278.7,0)"><path d="M579 519C579 616 497 657 357 657L122 657L116 627C196 627 202 608 191 553L103 124C86 40 71 30-3 30L-9 0L267 0L272 30C186 30 175 41 192 124L229 302L250 302C286 302 299 296 314 268C345 207 366 165 441 0L593 0L599 30C553 30 529 41 507 81C425 236 405 287 369 312L369 317C456 332 579 378 579 519M292 615C315 617 325 618 351 618C450 618 480 569 480 515C480 387 387 342 267 338L236 339Z"></path></g><g transform="translate(1898.7,0)"></g><g transform="translate(1898.3,0)"><g transform="translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(357,0)"><g><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g><g transform="translate(592,413) scale(0.707)" data-mjx-texclass="ORD"><g><path d="M122 104L130 104C143 54 175-11 249-11C387-11 495 133 495 307C496 432 433 481 362 481C213 481 124 383 71 141C48 42 27-80-5-213L8-216C100-216 103-155 109-45C111-3 114 47 122 104M147 191C148 333 259 395 338 395C390 395 446 371 446 273C446 148 355 71 254 71C194 71 147 103 147 191Z"></path></g></g></g><g transform="translate(1385.8,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g></g></g><g transform="translate(0,-1273.7)"><path d="M956-257L639-257C282-257 146-176 40-12L0-33C88-235 269-346 660-346L956-346Z"></path><path d="M0-346L296-346C687-346 868-235 956-33L916-12C810-176 674-257 317-257L0-257Z" transform="translate(2685.1,0)"></path><path d="M942-257L617-257C544-257 499-299 476-351L468-351C442-297 403-257 327-257L0-257L0-346L356-346C427-346 447-385 447-440L498-440C498-385 518-346 589-346L942-346Z" transform="translate(1349.6,0)"></path><svg width="533.6" height="229" x="886" y="-416" viewBox="133.4 -416 533.6 229"><path d="M0-257L0-346L750-346L750-257Z" transform="scale(1.067,1)"></path></svg><svg width="533.6" height="229" x="2221.6" y="-416" viewBox="133.4 -416 533.6 229"><path d="M0-257L0-346L750-346L750-257Z" transform="scale(1.067,1)"></path></svg></g></g></g><g transform="translate(0,-2377.7) scale(0.707)" data-mjx-texclass="ORD"><g><text data-variant="normal" transform="scale(1,-1)" font-size="958px" font-family="serif">每个零点</text><path d="" transform="translate(4000,0)"></path></g><g transform="translate(4235,0)"><path d="M122 104L130 104C143 54 175-11 249-11C387-11 495 133 495 307C496 432 433 481 362 481C213 481 124 383 71 141C48 42 27-80-5-213L8-216C100-216 103-155 109-45C111-3 114 47 122 104M147 191C148 333 259 395 338 395C390 395 446 371 446 273C446 148 355 71 254 71C194 71 147 103 147 191Z"></path></g><g transform="translate(4782,0)"><path d=""></path><text data-variant="normal" transform="translate(235,0) scale(1,-1)" font-size="958px" font-family="serif">一道波</text></g></g></g><g transform="translate(15259.4,0)"></g><g transform="translate(15704.1,0)"><path d="M658 225L658 293L396 293L396 558L324 558L324 293L62 293L62 225L324 225L324-40L396-40L396 225Z"></path></g><g transform="translate(16424.1,0)"></g><g transform="translate(16702.1,0)"><text data-variant="normal" transform="scale(1,-1)" font-size="958px" font-family="serif">（两个很小的修正项）</text></g></g></g></svg></div></div>
+  <div class="prose">
+    <p>主旋律 <span class="m">R</span>(<span class="m">x</span>) 是一条光滑曲线，和上一节的 Li(<span class="m">x</span>) 很接近。后面的求和里，每个零点贡献一道波。零点位置越高，波越密。先来看一个最直接的实验：只把零点的高度当作频率，合成一段信号。</p>
+  </div>
+  <figure class="plate" data-fig="spikes" id="fig-spikes">
+    <header class="plate-head"><span class="plate-no">图 5</span><h3 class="plate-title">用零点合成一段信号，尖峰恰好落在质数上</h3><p class="plate-sub">信号里没有输入任何质数，只用了零点的高度。拖动滑块增加零点。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>峰高为 1 的位置是质数。4、8、9 这样的质数的幂处有矮一些的峰，高度是 ½ 或 ⅓。6、10、12 这些合数处什么也没有。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>零点“知道”质数在哪里。反过来，把每个零点的波按公式加到主旋律上，就能把质数的台阶一级一级地找回来。</p>
+  </div>
+  <figure class="plate" data-fig="music" id="fig-music">
+    <header class="plate-head"><span class="plate-no">图 6</span><h3 class="plate-title">一个一个加入零点，光滑的曲线长出了质数的台阶</h3><p class="plate-sub">拖动滑块，或者按“播放”。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>零点用得越多，曲线越贴近真实的台阶。这不是证明，也不依赖黎曼猜想：无论猜想真假，这个公式都成立。猜想管的是每道波有多响。</figcaption>
+  </figure>
+  <p class="takeaway"><b>小结</b>质数的全部起伏都写在零点里。零点的高度是音高，下一节讲音量。</p>
+</section>
+
+<!-- ============================== 四 ============================== -->
+<section class="chapter" id="line">
+  <div class="ch-mark"><b>四</b></div>
+  <div class="ch-head"><h2>为什么必须在线上</h2><p class="ch-lede">零点的实部是音量旋钮。所有零点都在线上，是让最响的音尽量轻的唯一办法。</p></div>
+  <div class="prose">
+    <p>把一个零点写成 ρ = β + <span class="m">i</span>γ。它贡献的那道波，振幅大约是 <span class="m">x</span> 的 β 次方除以 ln <span class="m">x</span>。高度 γ 管音高，实部 β 管音量，准确地说，管的是越往大数走响得有多快。</p>
+    <p>零点天生成对。直线右边 ½ + <span class="m">a</span> 处如果有零点，左边 ½ − <span class="m">a</span> 处一定有它的镜像。这像一架跷跷板：压下一头，另一头就翘起来。只要有一个零点离开直线，就必然有一个零点的 β 大于 ½，走得足够远，它一个音就会盖过整支乐队。</p>
+  </div>
+  <figure class="plate" data-fig="offline" id="fig-offline">
+    <header class="plate-head"><span class="plate-no">图 7</span><h3 class="plate-title">假想实验：只要有一个零点偏离直线，它的波迟早盖过其余所有</h3><p class="plate-sub">把一个假想的零点向右拖离临界线。纵轴已经除以线上零点的音量，所以线上的波保持等高。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>红色的零点并不存在，它只是一个思想实验。实部哪怕只比 ½ 大一点，数到足够大的 x，它的波都会比线上的波响任意多倍。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>于是黎曼猜想可以翻译成一句不含零点的话。冯·科赫在 1901 年证明，它等价于：</p>
+  </div>
+  <div class="formula"><div class="formula"><svg class="mjx mjx-block" role="img" aria-label="质数个数与对数积分之差的绝对值，不超过一个常数乘以根号 x 再乘以 x 的自然对数" style="vertical-align: -0.731ex;" xmlns="http://www.w3.org/2000/svg" width="24.55ex" height="2.868ex" viewBox="0 -1023.9 11759.3 1373.9"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g><g data-mjx-texclass="OPEN"><g><svg width="267" height="1200" y="-350" x="0" viewBox="0 -127.6 267 1200"><path d="M162-220L162 706L105 706L105-220Z" transform="scale(1,1.944)"></path></svg></g></g><g transform="translate(267,0)"></g><g transform="translate(434,0)"><path d="M625 473C571 469 513 467 451 467C380 468 324 472 252 472C157 472 90 442 48 354L70 339C113 391 135 392 242 392C218 307 189 249 137 169C88 93 76 77 31 14L31 0L126 0C167 68 258 285 281 391C330 391 375 389 424 388C383 277 326 154 326 68C326 26 343-9 391-9C452-9 494 20 527 69L514 86C497 73 479 61 444 61C412 61 405 94 405 121C405 197 452 339 468 387C493 386 507 386 522 386C589 386 622 436 627 461Z"></path></g><g transform="translate(1068,0) translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(1425,0)"><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g><g transform="translate(1984,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g><g transform="translate(2563.2,0)"><path d="M658 225L658 293L62 293L62 225Z"></path></g><g transform="translate(3505.4,0)"><path d="M260 29C188 29 183 43 183 101L183 706L158 706L26 671L26 644C26 644 41 646 58 646C83 646 100 644 100 603L100 101C100 45 96 29 30 29L30 0L260 0Z"></path><path d="M257 28C190 28 185 43 185 101L185 482L159 482L33 454L33 425C33 425 44 427 58 427C87 427 102 423 102 380L102 101C102 44 99 28 32 28L32 0L257 0M145 673C110 673 88 647 88 617C88 586 111 560 145 560C180 560 202 586 202 617C202 647 180 673 145 673Z" transform="translate(283,0)"></path></g><g transform="translate(4073.4,0)"><path d=""></path></g><g transform="translate(4073.4,0) translate(0 -20)"><path d="M45 270C45 47 150-112 311-196L327-170C181-71 127 66 127 270C127 474 181 611 327 710L311 736C150 652 45 493 45 270Z"></path></g><g transform="translate(4430.4,0)"><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g><g transform="translate(4989.4,0) translate(0 -20)"><path d="M312 270C312 493 207 652 46 736L30 710C176 611 230 474 230 270C230 66 176-71 30-170L46-196C207-112 312 47 312 270Z"></path></g><g transform="translate(5346.4,0)"></g><g data-mjx-texclass="CLOSE" transform="translate(5513.4,0)"><g><svg width="267" height="1200" y="-350" x="0" viewBox="0 -127.6 267 1200"><path d="M162-220L162 706L105 706L105-220Z" transform="scale(1,1.944)"></path></svg></g></g><g transform="translate(5780.4,0)"></g><g transform="translate(6336.2,0)"><path d="M650 52L650 116L207 337L650 557L650 623L71 342L71 332M650-106L650-38L71-38L71-106Z"></path></g><g transform="translate(7056.2,0)"></g><g transform="translate(7612,0)"><path d="M567 145C500 84 430 54 352 54C220 54 158 125 158 259C158 479 288 627 442 627C541 627 599 573 594 440L627 440L674 669L645 669C629 647 619 633 603 633C578 633 552 670 451 670C248 670 60 515 60 234C60 102 124-11 305-11C431-11 517 46 585 126Z"></path></g><g transform="translate(8286,0)"></g><g transform="translate(8453,0)"><g transform="translate(0,33.9)"><path d="M667 922L399-93L395-93L197 417L177 417L18 307L34 279L138 319L371-265L413-265L713 854L829 854L829 922Z"></path></g><g transform="translate(829,0)"><g><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g></g><rect width="559" height="68" x="829" y="887.9"></rect></g><g transform="translate(9841,0)"></g><g transform="translate(10174.7,0)"><path d="M260 29C188 29 183 43 183 101L183 706L158 706L26 671L26 644C26 644 41 646 58 646C83 646 100 644 100 603L100 101C100 45 96 29 30 29L30 0L260 0Z"></path><path d="M481 307C481 422 438 485 347 485C284 485 240 449 186 401L182 401L183 482L160 482L33 453L33 424C33 424 43 426 60 426C87 426 102 418 102 382L102 101C102 45 99 28 32 28L32 0L261 0L261 28C189 28 185 45 185 101L185 358C215 385 252 421 306 421C351 421 398 402 398 282L398 101C398 45 395 28 324 28L324 0L555 0L555 28C488 28 481 45 481 101Z" transform="translate(283,0)"></path></g><g transform="translate(11033.7,0)"><path d=""></path></g><g transform="translate(11200.3,0)"><path d="M315 298L312 298L300 349C286 403 267 447 243 475L228 475L89 459L89 429C89 429 104 432 120 432C186 433 203 406 230 322L258 231L186 126C147 70 129 69 125 69C108 69 84 82 62 82C38 82 23 60 23 40C23 15 38-9 81-9C141-9 174 38 206 90L270 194L274 194L299 93C313 28 335-10 381-10C449-10 491 58 520 102L499 118C472 82 453 62 427 62C396 62 376 99 348 191L327 259L388 356C405 384 419 398 442 398C455 398 478 388 494 388C521 388 540 411 540 435C540 463 528 479 490 479C431 479 391 430 364 382Z"></path></g></g></g></svg></div></div>
+  <div class="prose">
+    <p>用人话说：拿光滑曲线去估计质数的个数，误差不会比 √<span class="m">x</span> 大多少。√<span class="m">x</span> 是什么概念？一个 24 位的数，平方根只有 12 位。误差只有 12 位，就是说估计值的前一半数字总是对的。</p>
+  </div>
+  <div class="asides">
+    <p class="aside"><b>li(x) 和 Li(x)</b>两者只差一个常数 1.045：li(x) 从 0 起算，Li(x) 从 2 起算。这一节的精确结论按惯例用 li(x)。</p>
+  </div>
+  <figure class="plate" data-fig="digits" id="fig-digits">
+    <header class="plate-head"><span class="plate-no">图 8</span><h3 class="plate-title">黎曼猜想的日常版本：估计值的前一半数字总是对的</h3><p class="plate-sub">拖动滑块改变 <span class="m">x</span>，比较真实的质数个数和 li(<span class="m">x</span>) 给出的估计。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>π(10²⁹) 是目前精确算出的最大一个，2022 年由 David Baugh 和 Kim Walisch 完成。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>√<span class="m">x</span> 还是抛硬币的涨落。抛 <span class="m">x</span> 次硬币，正面和反面的次数之差，典型大小就是 √<span class="m">x</span> 的量级。所以黎曼猜想等于说：质数除了密度 1/ln <span class="m">x</span> 之外，没有任何隐藏的偏向。它们的“不听话”恰好只有纯随机那么多。</p>
+  </div>
+  <figure class="plate" data-fig="envelope" id="fig-envelope">
+    <header class="plate-head"><span class="plate-no">图 9</span><h3 class="plate-title">一路算到 10²⁹，质数的误差始终待在黎曼猜想划定的界线之内</h3><p class="plate-sub">纵轴是真实质数个数与 li(<span class="m">x</span>) 的差距。两个轴都是对数刻度，每一格是若干个十倍。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>界线 √x · ln x / 8π 由舍恩菲尔德在 1976 年给出，对 x ≥ 2657 成立的前提正是黎曼猜想。实际误差一直远在界线之下。</figcaption>
+  </figure>
+  <p class="takeaway"><b>小结</b>零点都在线上，等价于质数的误差只有 √x 那么大。这是数学允许的最小起伏。</p>
+</section>
+
+<!-- ============================== 五 ============================== -->
+<section class="chapter" id="evidence">
+  <div class="ch-mark"><b>五</b></div>
+  <div class="ch-head"><h2>十万亿个证据，为什么还不算数</h2><p class="ch-lede">在数论里，规律可以在远超计算能力的地方崩塌。</p></div>
+  <div class="prose">
+    <p>黎曼之后，人们一直在一个一个地检查零点。1903 年，格拉姆用纸笔算了 15 个。1950 年，图灵把这件事搬上了电子计算机。2004 年，古尔东和德米歇尔宣布检查了前十万亿（10¹³）个。2021 年，普拉特和特鲁吉安用带误差控制的严格算法证明：高度 3 × 10¹² 以下的 12,363,153,437,138 个零点，全部在线上。</p>
+  </div>
+  <figure class="plate" data-fig="evidence" id="fig-evidence">
+    <header class="plate-head"><span class="plate-no">图 10</span><h3 class="plate-title">一百多年里，被验证落在线上的零点从 15 个增加到十万亿个</h3><p class="plate-sub">纵轴是对数刻度，每一格代表若干个十倍。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>每一个被检查过的零点都在线上，没有例外。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>理论上的进展慢得多。1914 年，哈代证明有无穷多个零点在线上。1942 年，塞尔伯格证明这样的零点占一个固定的比例。1974 年莱文森把比例做到三分之一以上，1989 年康瑞做到五分之二以上，到 2020 年是十二分之五。一百六十年的努力，换来的是不到一半。（2026 年 8 月，这个比例被一举提高到三分之二，见文末的时间线。）</p>
+    <p>十万亿个零点无一例外，为什么数学家仍然不放心？因为零点有无穷多个，而数论里有过教训：</p>
+  </div>
+  <div class="tales wide">
+    <article class="tale">
+      <span class="tale-n">≈ 1.4 × 10³¹⁶</span>
+      <h3>“li(x) 总是高估质数个数”</h3>
+      <p>在人类直接验证过的范围（10¹⁹ 以内）里，li(x) 始终比 π(x) 大。可李特尔伍德在 1914 年证明，两者的大小关系会反转无穷多次。已知在 1.4 × 10³¹⁶ 之前必定发生过反转，而可观测宇宙里的原子只有大约 10⁸⁰ 个。</p>
+    </article>
+    <article class="tale">
+      <span class="tale-n">1885 → 1985</span>
+      <h3>梅滕斯猜想</h3>
+      <p>它断言某个与质数有关的累加和永远不超过 √x，一旦成立就能推出黎曼猜想。它对所有算过的数都成立，整整撑了一百年。1985 年，奥德利兹科和特里勒证明它是错的。直到今天，没有人能写出一个具体的反例。</p>
+    </article>
+    <article class="tale">
+      <span class="tale-n">906,150,257</span>
+      <h3>波利亚猜想</h3>
+      <p>它说在任何范围内，“质因数个数为奇数”的整数都不少于一半。前九亿个数都符合。1958 年它被证明是错的，最小的反例在 1980 年找到，就是上面这个数。</p>
+    </article>
+  </div>
+  <p class="takeaway"><b>小结</b>检验再多也是有限个。要确信无穷多个零点都在线上，只能靠证明。</p>
+</section>
+
+<!-- ============================== 六 ============================== -->
+<section class="chapter" id="physics">
+  <div class="ch-mark"><b>六</b></div>
+  <div class="ch-head"><h2>物理学里的回声</h2><p class="ch-lede">零点之间的间距，和量子系统的能级间距遵循同一类统计规律。</p></div>
+  <div class="prose">
+    <p>1972 年 4 月，数论学家蒙哥马利访问普林斯顿高等研究院。下午茶时，有人把他介绍给物理学家戴森。蒙哥马利提起自己刚算出的一个公式，描述零点两两之间的距离如何分布。戴森听完说，这正是随机矩阵本征值的分布公式。</p>
+    <p>随机矩阵是物理学家维格纳在 1950 年代引入的工具，用来描述重原子核里密密麻麻的能级。这些能级有个特点：互相“排斥”，很少挨得太近。零点也是这样。后来奥德利兹科计算了第 10²⁰ 个零点附近的上亿个零点，间距的分布和随机矩阵理论的预言几乎分毫不差。</p>
+  </div>
+  <figure class="plate" data-fig="spectra" id="fig-spectra">
+    <header class="plate-head"><span class="plate-no">图 11</span><h3 class="plate-title">零点互相“排斥”，间距的分布和随机矩阵的本征值如出一辙</h3><p class="plate-sub">上：几种“谱线”并排比较，平均间距都调成了 1。下：零点间距的直方图与两条理论曲线。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>随机撒下的点会扎堆，零点不会。图中用的是最靠前的一万个零点。位置越高，与理论曲线贴合得越好。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>这让一个老想法重新受到重视。希尔伯特和波利亚在二十世纪初设想过：也许存在某个量子系统，它的能级恰好就是这些零点。如果找到它，黎曼猜想就会随之得证。这个系统至今没有找到。统计上的相似是线索，不是证明，但它暗示质数和量子物理之间有一层还没被理解的联系。</p>
+  </div>
+  <div class="asides">
+    <p class="aside"><b>同一类，不是同一个</b>零点对应的是随机矩阵里叫 GUE 的一族，重原子核的能级对应另一族（GOE）。两者都有能级排斥，细节不同。</p>
+  </div>
+</section>
+
+<!-- ============================== 七 ============================== -->
+<section class="chapter" id="tower">
+  <div class="ch-mark"><b>七</b></div>
+  <div class="ch-head"><h2>押在它身上的大厦</h2><p class="ch-lede">一个多世纪里，数学家没有干等。他们先假设猜想成立，看看能推出什么。</p></div>
+  <div class="prose">
+    <p>这样推出来的结论叫条件定理，它们的开头都是同一句话：“假设黎曼猜想成立”。一百多年下来，这样的结论积累了一大批，从质数之间的间隔，到判断一个数是不是质数的算法。</p>
+    <p>看这座大厦要分清楼层。有些结论只需要黎曼猜想本身。有些需要它的推广，把 ζ 换成一整族相似的函数，叫广义黎曼猜想。还有一些需要更广的推广。另有几个著名难题常被误以为会跟着解决，其实和它没有已知的推出关系。</p>
+  </div>
+  <figure class="plate" data-fig="tower" id="fig-tower">
+    <header class="plate-head"><span class="plate-no">图 12</span><h3 class="plate-title">证明一旦被确认，哪些结论会去掉“假设”二字</h3><p class="plate-sub">拨动开关，比较证明公布之前和之后。这里只列出有代表性的十二条。</p></header>
+    <div class="fig-body"></div>
+    <figcaption>猜想若是错的，这些结论并不会跟着变成错的，它们只是失去了证明。几条已经另找到不依赖猜想的证明，说明数学家多半押对了方向。</figcaption>
+  </figure>
+  <div class="prose">
+    <p>专家长期相信黎曼猜想，还有一个更深的理由。把整数换成“有限域上的曲线”，同样可以定义 ζ 函数和它的黎曼猜想。这个平行世界里的版本，韦伊在 1948 年证明了，德利涅在 1974 年又把它推广到一般情形。平行世界里是定理的东西，很难想象在整数的世界里是错的。</p>
+  </div>
+</section>
+
+<!-- ============================== 八 ============================== -->
+<section class="chapter" id="after">
+  <div class="ch-mark"><b>八</b></div>
+  <div class="ch-head"><h2>证明之后</h2><p class="ch-lede">这一次，我们先得到了“对”，还没有得到“为什么”。</p></div>
+  <div class="status wide">
+    <span class="status-date">截至 2026 年 11 月 23 日的公开信息</span>
+    <div class="status-grid">
+      <div>
+        <h3><i class="on"></i>已经公布</h3>
+        <p>11 月 20 日，在 Anthropic 工作的数学家 Levent Alpöge 发布了一份四页的说明和一个 Lean 4 证明库，约 17.5 万个文件、1,700 万行。说明称，证明是他与 AI 系统 Claude 一起得到的，结论包括黎曼猜想，以及一族“狄利克雷 L 函数”的广义黎曼猜想。</p>
+      </div>
+      <div>
+        <h3><i class="on"></i>已经核实</h3>
+        <p>11 月 21 日，Lean 与 Mathlib 社区发表联合声明：被证明的命题就是数学库里早已写好的黎曼猜想标准表述，证明通过了内核检验，只用到三条标准公理。多位独立人士用不同的检验程序重跑，结论一致。</p>
+      </div>
+      <div>
+        <h3><i></i>尚未完成</h3>
+        <p>人能读懂的论证还没有写出来，证明也没有经过传统的同行评审。克雷数学研究所尚未表态。按它的规则，解答要正式发表、经过至少两年并被数学界普遍接受，才会进入颁奖程序。</p>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>下面的讨论，都以这份证明最终被确认为前提。</p>
+    <h3>明天早上不会变的事</h3>
+    <p>质数不会变，手机不会更快，网上银行的密码也不会失效。RSA 这类加密的安全性来自“把大数分解成质数很难”，和黎曼猜想有没有被证明无关。工程师早就按它成立来做估算了。需要保留一句：证明里的新工具会不会催生新算法，现在没人知道。</p>
+    <h3>立刻改变的事</h3>
+    <p>图 12 里的卡片会去掉“假设”二字，成为无条件的定理。质数分布的误差从此有了确定的上限。几代数论学家打下的“欠条”，一次兑现。</p>
+    <h3>最大的收获还没有到手</h3>
+    <p>历史上，大猜想的价值多半在证明所创造的新数学里。怀尔斯证明费马大定理，带出了椭圆曲线与模形式之间的深刻联系。佩雷尔曼证明庞加莱猜想，让“里奇流”成了几何学家的常用工具。素数定理的证明把复分析带进了数论。</p>
+    <p>这一次的情形没有先例。一千七百万行机器代码，没有人能通读。据目前公开的初步解读，证明的路线借助了算术几何和朗兰兹纲领里的现代工具，与经典的解析数论很不一样。把它翻译成人能理解、能教给学生的数学，可能要很多年。在那之前，我们知道质数的乐队里没有谁会抢拍，却说不清是谁在指挥。</p>
+    <h3>数学的做法在变</h3>
+    <p>1976 年，四色定理靠计算机逐一检查近两千种情形得证，当时就有人质疑这算不算证明。开普勒猜想的证明太长，审稿人无法完全确认，直到 2014 年才由计算机完成形式化检验。如果黎曼猜想的证明被确认，它将是七个千禧年大奖难题里，第一个由 AI 参与发现、并先以机器可检验的形式问世的证明。“一个定理被接受”的依据，正从“专家读懂了”扩展到“检验程序通过了”。数学家普遍认为这还不够：数学追问的是为什么。</p>
+    <h3>还剩下什么</h3>
+    <p>很多。更一般的 L 函数的黎曼猜想不在这份证明里。零点间距为什么服从随机矩阵的规律，仍然只是猜想；希尔伯特和波利亚设想的那个量子系统还没有找到。哥德巴赫猜想和孪生质数猜想与它没有已知的推出关系，照旧悬而未决。</p>
+  </div>
+  <p class="closing">相传希尔伯特说过，如果沉睡一千年后醒来，他的第一个问题会是：黎曼猜想证明了吗？今天的回答大概是：有一份证明，机器说它是对的，我们正在学着读懂它。</p>
+</section>
+
+<!-- ============================== 九 ============================== -->
+<section class="chapter" id="timeline">
+  <div class="ch-mark"><b>九</b></div>
+  <div class="ch-head"><h2>一条时间线</h2><p class="ch-lede">从欧拉的等式到一千七百万行代码。</p></div>
+  <ol class="timeline wide">
+    <li><time>1737</time><p><b>欧拉</b>发现对所有整数的求和等于对所有质数的乘积。</p></li>
+    <li><time>1792–1793</time><p>十五六岁的<b>高斯</b>从质数表里看出：x 附近的质数密度约为 1/ln x。</p></li>
+    <li class="key"><time>1859</time><p><b>黎曼</b>发表《论小于给定数值的质数个数》。全文不过十页，其中几句话就是黎曼猜想。</p></li>
+    <li><time>1896</time><p><b>阿达马</b>与<b>德拉瓦莱普桑</b>各自证明素数定理。</p></li>
+    <li><time>1900</time><p><b>希尔伯特</b>把它列入著名的 23 个问题，位列第 8。</p></li>
+    <li><time>1914</time><p><b>哈代</b>证明临界线上有无穷多个零点。同年<b>李特尔伍德</b>证明 li(x) 与 π(x) 的大小关系会反转无穷多次。</p></li>
+    <li><time>1932</time><p><b>西格尔</b>在黎曼的遗稿中发现，黎曼早就掌握了一套计算零点的高效公式。</p></li>
+    <li><time>1942</time><p><b>塞尔伯格</b>证明落在线上的零点占正的比例。</p></li>
+    <li><time>1948</time><p><b>韦伊</b>证明了有限域上曲线的“黎曼猜想”。1974 年<b>德利涅</b>把它推广到一般情形。</p></li>
+    <li><time>1950</time><p><b>图灵</b>用曼彻斯特 Mark 1 计算机验证了前 1,104 个零点。</p></li>
+    <li><time>1972</time><p><b>蒙哥马利</b>与<b>戴森</b>在茶歇上发现零点与随机矩阵的联系。</p></li>
+    <li><time>1974 · 1989</time><p><b>莱文森</b>证明超过三分之一的零点在线上，<b>康瑞</b>把比例提高到五分之二以上。</p></li>
+    <li><time>2000</time><p>克雷数学研究所把它列为七个千禧年大奖难题之一，悬赏 100 万美元。它是唯一同时出现在希尔伯特问题和千禧年难题里的题目。</p></li>
+    <li><time>2004</time><p><b>古尔东</b>与<b>德米歇尔</b>用计算机检查了前 10¹³ 个零点。</p></li>
+    <li><time>2018</time><p><b>罗杰斯</b>与<b>陶哲轩</b>证明：黎曼猜想即使成立，也只是“勉强”成立，没有任何余量。</p></li>
+    <li><time>2021</time><p><b>普拉特</b>与<b>特鲁吉安</b>严格证明高度 3 × 10¹² 以下的零点全部在线上。</p></li>
+    <li><time>2024</time><p><b>古斯</b>与<b>梅纳德</b>改进了保持八十多年的“线外零点最多有多少”的估计。</p></li>
+    <li><time>2026 年 8 月</time><p>Anthropic 宣布 Claude 证明了超过三分之二的零点在线上（Alpöge 与 Furman 的预印本，附形式化检验），此前的纪录是十二分之五。</p></li>
+    <li><time>2026 年 10 月</time><p>OpenAI 公布一批 AI 生成的数学稿件，其中一篇声称证明了实部大于 7/8 的区域里没有零点。此前，人们无法证明任何一条实部小于 1 的竖线右侧没有零点。</p></li>
+    <li class="key"><time>2026 年 11 月 20 日</time><p><b>Alpöge</b> 与 <b>Claude</b> 公布黎曼猜想的 Lean 形式化证明。次日，Lean 与 Mathlib 社区确认它通过检验。</p></li>
+  </ol>
+</section>
+
+<footer class="chapter footer" id="sources">
+  <div class="ch-mark"></div>
+  <div class="ch-head"><h2>来源与说明</h2></div>
+  <ul class="sources wide">
+    <li>2026 年 11 月的证明：Lean 社区声明 <a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/">Lean verification of the Riemann Hypothesis</a>；第三方整理的验证状态与导读 <a href="https://github.com/nasqret/riemann-rev">nasqret/riemann-rev</a>；报道见<a href="https://www.yicai.com/news/103449169.html">第一财经</a>、<a href="https://news.qq.com/rain/a/20261122A05OFZ00">腾讯新闻</a>。事态仍在发展，请以原始声明为准。</li>
+    <li>克雷数学研究所：<a href="https://www.claymath.org/millennium/riemann-hypothesis/">Riemann Hypothesis</a>（题目表述与评奖规则）。</li>
+    <li>零点的严格验证：D. Platt, T. Trudgian, <a href="https://arxiv.org/abs/2004.09765">The Riemann hypothesis is true up to 3·10¹²</a>, Bull. London Math. Soc. 53 (2021)。</li>
+    <li>误差上限：L. Schoenfeld, Sharper bounds for the Chebyshev functions θ(x) and ψ(x). II, Math. Comp. 30 (1976)；H. von Koch, Acta Math. 24 (1901)。</li>
+    <li>线上零点的比例：K. Pratt, N. Robles, A. Zaharescu, D. Zeindler, <a href="https://arxiv.org/abs/1802.10521">More than five-twelfths of the zeros of ζ are on the critical line</a> (2020)。</li>
+    <li>零点密度估计：L. Guth, J. Maynard, <a href="https://arxiv.org/abs/2405.20552">New large value estimates for Dirichlet polynomials</a> (2024)。</li>
+    <li>π(10²⁹) 等精确值：<a href="https://github.com/kimwalisch/primecount">primecount</a> 项目记录；零点数值表：<a href="https://www-users.cse.umn.edu/~odlyzko/zeta_tables/">A. Odlyzko</a>。</li>
+    <li>延伸阅读：卢昌海《黎曼猜想漫谈》；M. du Sautoy, <i>The Music of the Primes</i>；H. M. Edwards, <i>Riemann’s Zeta Function</i>。</li>
+  </ul>
+  <p class="colophon wide">关于这些图：页面里的 ζ 函数是在你的浏览器里实时计算的，数值与高精度软件 mpmath 对照过。前 10,000 个零点由 mpmath 算出。图 6 使用黎曼的精确公式，没有做任何拟合。图 11 中的随机矩阵本征值来自一次数值模拟。2026 年的几件事距今很近，这里依据的是公开报道和社区声明，细节可能还会变化。</p>
+</footer>
+
+</main>
+
+<script src="js/core.js"></script>
+<script src="js/kit.js"></script>
+<script src="js/data.js"></script>
+<script src="js/facts.js"></script>
+<script src="js/fig-hero.js"></script>
+<script src="js/fig-stairs.js"></script>
+<script src="js/fig-map.js"></script>
+<script src="js/fig-music.js"></script>
+<script src="js/fig-line.js"></script>
+<script src="js/fig-spectra.js"></script>
+<script src="js/fig-extra.js"></script>
+<script>
+(function () {
+  function go() { if (window.RH && RH.kit) RH.kit.boot(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+</script>
+
+</body></html>
