@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>群论实验台</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=STIX+Two+Text:ital,wght@0,500;1,500&display=swap">
+<style>
+/* 布局：上面是实验台（左边形状，右边它的对称地图，下面两个生成元按钮），中间是六步引导，底下是乘法表。r 永远是蓝色，s 永远是橙色。 */
+:root {
+  --bg: #f5f7fa;
+  --fg: #171b28;
+  --muted: #5a6274;
+  --panel: #ffffff;
+  --line: #d3d9e3;
+  --r: #2462d4;
+  --s: #c9541c;
+  --on-gen: #ffffff;
+  --cur: #ffd84d;
+  --on-cur: #2b2200;
+  --seen: #e6ebf3;
+  --face: #e9eef6;
+  --face-back: #c5cede;
+  --rot-bg: #dbe7fb;
+  --ref-bg: #fbe3d4;
+  --ok: #17794a;
+  --v1: #e5484d; --v2: #f0a020; --v3: #2fa866; --v4: #2f6fde; --v5: #9457e0; --v6: #1598ab;
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", "Noto Serif SC", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131a; --fg: #e9ecf3; --muted: #a0a8ba; --panel: #1a1d29; --line: #343a4c;
+    --r: #76a4ff; --s: #ff9a5c; --on-gen: #10131c; --cur: #ffd84d; --on-cur: #2b2200;
+    --seen: #2a3042; --face: #262b3b; --face-back: #3c445c;
+    --rot-bg: #1f3157; --ref-bg: #4d2c18; --ok: #5fd39a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131a; --fg: #e9ecf3; --muted: #a0a8ba; --panel: #1a1d29; --line: #343a4c;
+  --r: #76a4ff; --s: #ff9a5c; --on-gen: #10131c; --cur: #ffd84d; --on-cur: #2b2200;
+  --seen: #2a3042; --face: #262b3b; --face-back: #3c445c;
+  --rot-bg: #1f3157; --ref-bg: #4d2c18; --ok: #5fd39a;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 1rem; line-height: 1.75;
+  padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.6rem, 6vw, 2.1rem); line-height: 1.3; margin: 0; }
+.lede { margin: 0; color: var(--muted); max-width: 36em; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; line-height: 1.4; margin: 0; text-wrap: balance; }
+.el { font-family: var(--font-math); font-style: italic; font-size: 1.12em; }
+.el.r { color: var(--r); } .el.s { color: var(--s); }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 1.5px solid var(--line); background: transparent; color: var(--fg); border-radius: 999px; padding: 4px 14px; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 700; }
+
+.lab { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 10px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pane span { font-size: .8125rem; color: var(--muted); }
+.pane svg { display: block; width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 1; }
+
+.ghost { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 4; }
+.axis { stroke: var(--s); stroke-width: 1.5; stroke-dasharray: 3 5; opacity: .7; }
+.face { fill: var(--face); stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; }
+.face.back { fill: var(--face-back); }
+.vnum { fill: #fff; font: 700 14px var(--font-body); text-anchor: middle; dominant-baseline: central; }
+.er { stroke: var(--r); stroke-width: 2.2; fill: none; }
+.es { stroke: var(--s); stroke-width: 2.2; fill: none; }
+#ar path { fill: var(--r); }
+.node circle { fill: var(--panel); stroke: var(--line); stroke-width: 1.5; }
+.node text { fill: var(--muted); font: italic 500 11.5px var(--font-math); text-anchor: middle; dominant-baseline: central; }
+.node.seen circle { fill: var(--seen); stroke: var(--muted); }
+.node.seen text { fill: var(--fg); }
+.node.cur circle { fill: var(--cur); stroke: var(--fg); stroke-width: 2.5; }
+.node.cur text { fill: var(--on-cur); }
+.node.goal circle { stroke: var(--ok); stroke-width: 3; stroke-dasharray: 4 3; }
+.hide-unseen .node:not(.seen) text { visibility: hidden; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.gen { border: 0; border-radius: 12px; padding: 10px 18px; color: var(--on-gen); font-weight: 700; font-size: 1.05rem; }
+.gen .el { color: inherit; margin-right: 6px; font-size: 1.25em; }
+.gen.r { background: var(--r); } .gen.s { background: var(--s); }
+.quiet { border: 1.5px solid var(--line); background: transparent; color: var(--fg); border-radius: 12px; padding: 9px 14px; }
+.read { margin: 0; min-height: 1.75em; overflow-wrap: anywhere; }
+.read b { font-family: var(--font-math); font-style: italic; font-weight: 500; font-size: 1.3em; }
+
+.lesson { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.steps button { border: 0; background: var(--seen); color: var(--fg); border-radius: 8px; padding: 3px 10px; font-size: .9rem; }
+.steps button[aria-current="step"] { background: var(--fg); color: var(--bg); font-weight: 700; }
+.lesson p, .lesson ul { margin: 0; max-width: 36em; }
+.lesson ul { padding-left: 1.2em; }
+.task { font-weight: 700; }
+.done { color: var(--ok); font-weight: 700; }
+.nav { display: flex; gap: 10px; justify-content: space-between; }
+.next { border: 0; border-radius: 12px; padding: 9px 18px; background: var(--fg); color: var(--bg); font-weight: 700; }
+
+.tablehead { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.scroll { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 2px; font-variant-numeric: tabular-nums; }
+th, td { min-width: 34px; height: 34px; padding: 0 4px; text-align: center; font: italic 500 1rem var(--font-math); border-radius: 5px; white-space: nowrap; }
+th { color: var(--muted); }
+td { cursor: pointer; }
+td.rot { background: var(--rot-bg); } td.ref { background: var(--ref-bg); }
+td.same { box-shadow: inset 0 0 0 2px var(--fg); }
+td.pick { box-shadow: inset 0 0 0 2px var(--fg); background: var(--cur); color: var(--on-cur); }
+table.colors { border-spacing: 0; }
+table.colors td { color: transparent; border-radius: 0; box-shadow: none; }
+table.colors td.pick { background: revert-layer; }
+table.colors td.rot { background: var(--r); } table.colors td.ref { background: var(--s); }
+.cap { margin: 0; color: var(--muted); font-size: .9375rem; min-height: 1.75em; }
+</style>
+</head>
+<body>
+
+<main>
+  <header>
+    <h1>群论实验台</h1>
+    <p class="lede">群论研究的是对称。先别管定义，拿一个形状玩一会儿，定义会自己冒出来。</p>
+  </header>
+
+  <div class="seg" id="shapes" aria-label="选择形状"></div>
+
+  <div class="lab">
+    <div class="pane"><span>形状</span><svg id="shape" viewBox="-100 -100 200 200" role="img" aria-label="可以旋转和翻转的多边形"></svg></div>
+    <div class="pane"><span>它的全部摆法（地图）</span><svg id="graph" viewBox="-100 -100 200 200" role="img" aria-label="凯莱图"></svg></div>
+  </div>
+
+  <div class="controls">
+    <button class="gen r" id="btnR" type="button"><span class="el">r</span>转一下</button>
+    <button class="gen s" id="btnS" type="button"><span class="el">s</span>翻一下</button>
+    <button class="quiet" id="btnE" type="button">回到起点</button>
+  </div>
+  <p class="read" id="read" aria-live="polite"></p>
+
+  <section class="lesson" id="lesson"></section>
+
+  <section class="lesson">
+    <div class="tablehead">
+      <h2>乘法表</h2>
+      <button class="quiet" id="mode" type="button"></button>
+    </div>
+    <p class="cap">左边一列是先做的动作，上面一行是后做的动作。蓝底是旋转，橙底是带翻转的。</p>
+    <div class="scroll" id="table"></div>
+    <p class="cap" id="cellcap" aria-live="polite">点任意一格。</p>
+  </section>
+</main>
+
+<script>
+const SUP = ['', '', '²', '³', '⁴', '⁵'];
+const SHAPES = { 3: '三角形', 4: '正方形', 5: '五边形', 6: '六边形' };
+const STEPS = ['对称', '地图', '顺序', '乘法表', '子群', '定义'];
+const $ = id => document.getElementById(id);
+const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let n = 3, cur = { k: 0, f: 0 }, hist = [], seen = new Set([0]);
+let step = 1, colors = false, pick = null;
+let flags = {}, animToken = 0, timers = [];
+
+const nm = g => g.f ? 's' + (g.k ? 'r' + SUP[g.k] : '') : (g.k ? 'r' + SUP[g.k] : 'e');
+const id = g => g.f * n + g.k;
+// “先 a 再 b”：屏幕上先做 a，再对结果做 b
+const mul = (a, b) => ({ k: (((b.k + (b.f ? -a.k : a.k)) % n) + n) % n, f: a.f ^ b.f });
+const R = { k: 1, f: 0 }, S = { k: 0, f: 1 };
+const all = () => [0, 1].flatMap(f => Array.from({ length: n }, (_, k) => ({ k, f })));
+const el = (g, cls = '') => `<i class="el ${cls}">${typeof g === 'string' ? g : nm(g)}</i>`;
+const pt = (deg, rad) => [rad * Math.cos(deg * Math.PI / 180), rad * Math.sin(deg * Math.PI / 180)];
+const f1 = x => x.toFixed(1);
+
+function buildShape() {
+  const th = 360 / n;
+  const P = Array.from({ length: n }, (_, i) => pt(-90 + i * th, 68));
+  const poly = P.map(p => p.map(f1).join(',')).join(' ');
+  $('shape').innerHTML = `<polygon class="ghost" points="${poly}"/><line class="axis" x1="0" y1="-96" x2="0" y2="96"/>
+    <g id="mv"><g id="base"><polygon class="face" id="face" points="${poly}"/>
+    ${P.map((p, i) => `<circle cx="${f1(p[0])}" cy="${f1(p[1])}" r="13" fill="var(--v${i + 1})"/><text class="vnum" x="${f1(p[0])}" y="${f1(p[1])}">${i + 1}</text>`).join('')}</g></g>`;
+}
+
+function nodePos(g) { return pt(-90 + (g.f ? -g.k : g.k) * 360 / n, g.f ? 40 : 78); }
+function seg(a, b, cut) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+  return `x1="${f1(a[0] + ux * cut)}" y1="${f1(a[1] + uy * cut)}" x2="${f1(b[0] - ux * (cut + 2))}" y2="${f1(b[1] - uy * (cut + 2))}"`;
+}
+function buildGraph() {
+  let h = `<defs><marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z"/></marker></defs>`;
+  for (const g of all()) h += `<line class="er" marker-end="url(#ar)" ${seg(nodePos(g), nodePos(mul(g, R)), 14)}/>`;
+  for (let k = 0; k < n; k++) h += `<line class="es" ${seg(nodePos({ k, f: 0 }), nodePos(mul({ k, f: 0 }, S)), 13)}/>`;
+  for (const g of all()) { const p = nodePos(g); h += `<g class="node" data-id="${id(g)}"><circle cx="${f1(p[0])}" cy="${f1(p[1])}" r="13"/><text x="${f1(p[0])}" y="${f1(p[1])}">${nm(g)}</text></g>`; }
+  $('graph').innerHTML = h;
+}
+
+function buildTable() {
+  const E = all();
+  let h = `<table class="${colors ? 'colors' : ''}"><tr><th></th>${E.map(b => `<th>${nm(b)}</th>`).join('')}</tr>`;
+  for (const a of E) {
+    h += `<tr><th>${nm(a)}</th>`;
+    for (const b of E) {
+      const c = mul(a, b), isPick = pick && pick.a === id(a) && pick.b === id(b);
+      const same = pick && !isPick && pick.c === id(c);
+      h += `<td class="${c.f ? 'ref' : 'rot'}${isPick ? ' pick' : ''}${same ? ' same' : ''}" data-a="${id(a)}" data-b="${id(b)}">${nm(c)}</td>`;
+    }
+    h += '</tr>';
+  }
+  $('table').innerHTML = h + '</table>';
+  $('mode').textContent = colors ? '显示名字' : '只看颜色';
+}
+
+function animate(m) {
+  const mv = $('mv'), my = ++animToken, t0 = performance.now(), th = 360 / n;
+  if (calm) { mv.removeAttribute('transform'); return; }
+  (function frame(now) {
+    if (my !== animToken) return;
+    const t = Math.min(1, (now - t0) / 380), e = t * t * (3 - 2 * t);
+    mv.setAttribute('transform', m === 'r' ? `rotate(${f1(-th * (1 - e))})` : `scale(${(-1 + 2 * e).toFixed(3)},1)`);
+    if (t < 1) requestAnimationFrame(frame); else mv.removeAttribute('transform');
+  })(t0);
+}
+
+function press(m) {
+  cur = mul(cur, m === 'r' ? R : S);
+  hist.push(m);
+  seen.add(id(cur));
+  animate(m);
+  track();
+  update();
+}
+function home() { cur = { k: 0, f: 0 }; hist = []; animToken++; $('mv') && $('mv').removeAttribute('transform'); update(); }
+function stopAuto() { timers.forEach(clearTimeout); timers = []; }
+
+function track() {
+  const goal = { k: n - 1, f: 1 };
+  if (step === 2) {
+    if (id(cur) === id(goal)) flags.goal = true;
+    else if (flags.goal && id(cur) === 0) flags.back = true;
+  }
+}
+
+function update() {
+  $('base').setAttribute('transform', `rotate(${f1(cur.k * 360 / n)}) scale(${cur.f ? -1 : 1},1)`);
+  $('face').setAttribute('class', 'face' + (cur.f ? ' back' : ''));
+  const goalId = step === 2 && !flags.back ? (flags.goal ? 0 : id({ k: n - 1, f: 1 })) : -1;
+  document.querySelectorAll('#graph .node').forEach(g => {
+    const i = +g.dataset.id;
+    g.setAttribute('class', 'node' + (seen.has(i) ? ' seen' : '') + (i === id(cur) ? ' cur' : '') + (i === goalId && i !== id(cur) ? ' goal' : ''));
+  });
+  $('graph').setAttribute('class', step === 1 && seen.size < 2 * n ? 'hide-unseen' : '');
+  const tail = hist.slice(-10).map(m => el(m, m)).join(' ');
+  $('read').innerHTML = hist.length
+    ? `你按了 ${hist.length > 10 ? '… ' : ''}${tail}，现在停在 <b>${nm(cur)}</b>`
+    : `现在停在 <b>e</b>：什么都没动过。`;
+  renderLesson();
+}
+
+function renderLesson() {
+  const N = 2 * n, shape = SHAPES[n], r = el('r', 'r'), s = el('s', 's');
+  const rs = mul(R, S), sr = mul(S, R), goal = { k: n - 1, f: 1 };
+  const sub = '{' + Array.from({ length: n }, (_, k) => nm({ k, f: 0 })).join(', ') + '}';
+  let title, body;
+  if (step === 1) {
+    title = '对称，就是看不出来的动作';
+    body = `<p>把这个${shape}转一下（${r}），或者沿虚线翻个面（${s}）：它还是严丝合缝地落回原来的轮廓，只是几个角换了位置。这种动作叫<b>对称</b>。</p>
+      <p class="task">只用这两个按钮，找出它所有不同的摆法。已找到 ${seen.size} / ${N}</p>
+      ${seen.size === N ? `<p class="done">✓ 一共只有 ${N} 种。</p><p>无论怎么按，你都走不出这 ${N} 个点：两个对称接着做，结果还是一个对称。这叫<b>封闭性</b>。</p>` : ''}`;
+  } else if (step === 2) {
+    title = '每按一下，就在地图上走一步';
+    body = `<p>右边那张图是这 ${N} 种摆法的地图，数学家叫它<b>凯莱图</b>。蓝色箭头是 ${r}，橙色线是 ${s}。黄色的点是你现在的位置。</p>
+      <p class="task">从 ${el('e')} 走到 ${el(goal)}，再走回 ${el('e')}。${flags.goal && !flags.back ? '到了，现在回家。' : ''}</p>
+      ${flags.back ? `<p class="done">✓ 走得出去，就走得回来。</p><p>每个动作都有一个能把它抵消的动作，叫<b>逆元</b>。${r} 的逆元是再按 ${n - 1} 次 ${r}；${s} 的逆元就是它自己，所以橙线没有箭头。</p>` : ''}`;
+  } else if (step === 3) {
+    title = '先后顺序有关系';
+    body = `<p>3 × 5 和 5 × 3 是一样的。这里呢？两种都试一下：</p>
+      <div class="controls"><button class="quiet" data-act="rs" type="button">先 ${r} 再 ${s}</button><button class="quiet" data-act="sr" type="button">先 ${s} 再 ${r}</button></div>
+      <p>${flags.rs ? `先转再翻，停在 ${el(rs)}。` : ''} ${flags.sr ? `先翻再转，停在 ${el(sr)}。` : ''}</p>
+      ${flags.rs && flags.sr ? `<p class="done">✓ 两次停在了不同的点。</p><p>动作的顺序不能随便交换，这样的群叫<b>非交换群</b>。先穿袜子再穿鞋，和先穿鞋再穿袜子，也不是一回事。</p>` : ''}`;
+  } else if (step === 4) {
+    title = '把所有结果列成一张表';
+    body = `<p>“先做一个，再做一个”的全部 ${N} × ${N} 个结果，都在下面的乘法表里。点任意一格，表里和它结果相同的格子会一起亮起来。</p>
+      <p class="task">找规律：同一个结果，会不会在某一行里出现两次？</p>
+      <p>不会。每一行、每一列里，每个元素都恰好出现一次，和数独一样。原因就是上一步的逆元：假如一行里出现两个相同的结果，把先做的那个动作撤销掉，就会得出两个不同的动作其实是同一个。</p>`;
+  } else if (step === 5) {
+    title = '群里面还有群';
+    body = `<p>回到起点，只按 ${r}：你永远在外圈打转。${el(sub)} 自己就封闭、每一步都能撤销，是一个<b>子群</b>。它有 ${n} 个元素，正好整除 ${N}。这不是巧合：子群的大小一定整除整个群的大小（拉格朗日定理）。</p>
+      <p class="task">把下面的乘法表切到“只看颜色”。</p>
+      <p>${N} × ${N} 个小格变成了四大块：转 · 转 = 转，转 · 翻 = 翻，翻 · 翻 = 转。这和 正 × 负 = 负、负 × 负 = 正 是同一张表。把细节抹掉以后剩下的这个只有两个元素的小群，叫<b>商群</b>。</p>`;
+  } else {
+    title = '这就是群';
+    body = `<p>你已经把群的定义全部用过一遍了。一个<b>群</b>就是一堆动作，加上“先做一个，再做一个”，并且满足四条：</p>
+      <ul><li><b>封闭</b>：做完还在这堆动作里。</li><li><b>单位元</b>：有一个“什么都不做”，就是 ${el('e')}。</li><li><b>逆元</b>：每个动作都能撤销。</li><li><b>结合律</b>：连着做三个动作，不用操心括号加在哪。</li></ul>
+      <p>换个形状再走一遍（最上面的按钮）：正方形有 8 个对称，六边形有 12 个。同样这四条，也管着魔方的 43,252,003,274,489,856,000 种状态、晶体的结构，以及五次方程为什么没有求根公式。</p>`;
+  }
+  $('lesson').innerHTML = `<div class="steps">${STEPS.map((t, i) => `<button type="button" data-step="${i + 1}" ${i + 1 === step ? 'aria-current="step"' : ''}>${i + 1} ${t}</button>`).join('')}</div>
+    <h2>${title}</h2>${body}
+    <div class="nav">${step > 1 ? '<button class="quiet" data-step="' + (step - 1) + '" type="button">上一步</button>' : '<span></span>'}${step < 6 ? '<button class="next" data-step="' + (step + 1) + '" type="button">下一步</button>' : ''}</div>`;
+}
+
+function setN(v) {
+  stopAuto();
+  n = v; cur = { k: 0, f: 0 }; hist = []; seen = new Set([0]); flags = {}; pick = null;
+  $('shapes').innerHTML = Object.entries(SHAPES).map(([k, t]) => `<button type="button" data-n="${k}" aria-pressed="${+k === n}">${t}</button>`).join('');
+  buildShape(); buildGraph(); buildTable();
+  $('cellcap').textContent = '点任意一格。';
+  update();
+}
+
+function auto(seq, key) {
+  stopAuto(); home();
+  seq.forEach((m, i) => timers.push(setTimeout(() => { press(m); if (i === seq.length - 1) { flags[key] = true; renderLesson(); } }, 350 + i * 750)));
+}
+
+$('btnR').onclick = () => { stopAuto(); press('r'); };
+$('btnS').onclick = () => { stopAuto(); press('s'); };
+$('btnE').onclick = () => { stopAuto(); home(); };
+$('shapes').onclick = e => { const b = e.target.closest('button'); if (b) setN(+b.dataset.n); };
+$('mode').onclick = () => { colors = !colors; buildTable(); };
+$('lesson').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.step) { stopAuto(); step = +b.dataset.step; if (step === 2) { flags.goal = flags.back = false; } update(); }
+  else if (b.dataset.act === 'rs') auto(['r', 's'], 'rs');
+  else if (b.dataset.act === 'sr') auto(['s', 'r'], 'sr');
+};
+$('table').onclick = e => {
+  const td = e.target.closest('td');
+  if (!td) return;
+  const E = all(), a = E[+td.dataset.a], b = E[+td.dataset.b], c = mul(a, b);
+  pick = { a: id(a), b: id(b), c: id(c) };
+  buildTable();
+  $('cellcap').innerHTML = `先 ${el(a)}，再 ${el(b)}，结果是 ${el(c)}。上面的形状已经摆成了 ${el(c)}。`;
+  stopAuto(); cur = c; hist = []; seen.add(id(c)); animToken++; $('mv').removeAttribute('transform');
+  update();
+  $('read').innerHTML = `现在停在 <b>${nm(cur)}</b>`;
+};
+
+function start(d) {
+  if ([1, 2, 3, 4, 5, 6].includes(d.step)) step = d.step;
+  setN(SHAPES[d.n] ? d.n : 3);
+}
+window.claude?.hot?.snapshot?.(() => ({ n, step }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
