@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>首席大臣 1776</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* 布局：顶上两条账目（金银、货物）始终可见；下面一次只有一件事，三个选项；选完后三个结果一起摊开，再给出斯密的看法。 */
+:root {
+  --bg: #edf1ec;
+  --fg: #17261f;
+  --muted: #53645b;
+  --panel: #ffffff;
+  --line: #cfd8d1;
+  --gold: #a87400;
+  --goods: #17755a;
+  --bad: #b3372b;
+  --track: #dbe3dc;
+  --pick: #17261f;
+  --on-pick: #edf1ec;
+  --quote: #f4f7f3;
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-num: "Space Grotesk", "Noto Sans SC", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101814; --fg: #e6eee8; --muted: #9db0a5; --panel: #18231d; --line: #2f3f36;
+    --gold: #e3b341; --goods: #4fc79f; --bad: #ff8a7a; --track: #24332b;
+    --pick: #e6eee8; --on-pick: #101814; --quote: #1d2a23;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101814; --fg: #e6eee8; --muted: #9db0a5; --panel: #18231d; --line: #2f3f36;
+  --gold: #e3b341; --goods: #4fc79f; --bad: #ff8a7a; --track: #24332b;
+  --pick: #e6eee8; --on-pick: #101814; --quote: #1d2a23;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 1rem; line-height: 1.75;
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 900; font-size: 1.15rem; margin: 0; }
+.prog { font-family: var(--font-num); color: var(--muted); font-size: .9rem; margin: 0; }
+
+.ledger { display: flex; flex-direction: column; gap: 8px; }
+.meter { display: grid; grid-template-columns: 9.5em 1fr 3em; gap: 10px; align-items: center; font-size: .9rem; }
+.meter .bar { height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; border-radius: 5px; transition: width .8s ease; }
+.meter.gold i { background: var(--gold); } .meter.goods i { background: var(--goods); }
+.meter b { font-family: var(--font-num); font-variant-numeric: tabular-nums; text-align: right; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.5rem, 6vw, 1.9rem); line-height: 1.3; margin: 0; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; margin: 0; }
+p { margin: 0; max-width: 36em; }
+.eyebrow { color: var(--goods); font-weight: 700; font-size: .9rem; letter-spacing: .08em; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  font: inherit; text-align: left; color: var(--fg); background: transparent;
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+button.opt { cursor: pointer; font-weight: 700; }
+button.opt:hover { border-color: var(--fg); }
+button:focus-visible { outline: 3px solid var(--goods); outline-offset: 2px; }
+.opt .what { font-weight: 700; }
+.opt.mine { border-color: var(--pick); border-width: 2.5px; }
+.opt .then { color: var(--muted); font-size: .95rem; }
+.opt.mine .then { color: var(--fg); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: .8rem; }
+.tag { border-radius: 999px; padding: 0 9px; background: var(--track); font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.tag.you { background: var(--pick); color: var(--on-pick); font-family: var(--font-body); }
+.tag.smith { background: transparent; border: 1px solid var(--goods); color: var(--goods); font-family: var(--font-body); }
+.tag.up { color: var(--goods); } .tag.down { color: var(--bad); }
+
+.smithbox { background: var(--quote); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.smithbox .q { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; line-height: 1.7; }
+.smithbox .src { color: var(--muted); font-size: .85rem; }
+.go { align-self: flex-end; font: inherit; font-weight: 700; cursor: pointer; border: 0; border-radius: 12px; padding: 10px 22px; background: var(--pick); color: var(--on-pick); }
+
+.score { font-family: var(--font-num); font-weight: 700; font-size: clamp(2.6rem, 12vw, 3.6rem); line-height: 1; color: var(--goods); font-variant-numeric: tabular-nums; }
+.recap { display: flex; flex-direction: column; }
+.recap div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.recap .ok { color: var(--goods); font-weight: 700; } .recap .no { color: var(--bad); font-weight: 700; }
+.note { color: var(--muted); font-size: .9rem; }
+@media (prefers-reduced-motion: reduce) { .meter .bar i { transition: none; } }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="top"><p class="brand">首席大臣 1776</p><p class="prog" id="prog"></p></div>
+  <div class="ledger" id="ledger"></div>
+  <section class="card" id="card"></section>
+</main>
+
+<script>
+// 每个选项：[说法, 结果, 金银变化, 货物变化]；best 是斯密会选的那一项
+const LEVELS = [
+  {
+    key: '分工', title: '别针作坊',
+    text: '你是一个小王国的首席大臣。国王只交代了一句话：让国家富起来。第一站是一家别针作坊：10 个工人，每人从拉铁丝到装针头独自做完整根针，全作坊一天做不出 200 根。作坊主问你，怎样才能多做一些。',
+    opts: [
+      ['每天多干三小时', '产量多了三成，工人累垮了。人还是那些人，做法还是那个做法。', 0, 3],
+      ['把做针拆成 18 道工序，每人只做一两道', '一人拉丝，一人切断，一人磨尖。同样 10 个人，一天做出 48,000 根，是原来的 240 倍以上。', 0, 25],
+      ['再雇 10 个工人', '人多一倍，产量多一倍，工资也多一倍。', 0, 5]
+    ],
+    best: 1,
+    q: '“劳动生产力上最大的增进，看来都是分工的结果。”',
+    say: '工人没有变得更勤快或更聪明，只是每人专做一件事：手更熟，省掉了换工序的时间，也更容易想出省力的机器。48,000 这个数字是斯密自己在书里记下的。',
+    src: '卷一 第一章'
+  },
+  {
+    key: '市场范围', title: '卖不完的别针',
+    text: '作坊后来分了工，一天能做 48,000 根别针。可是全村一天只用得掉 500 根，仓库堆满了。',
+    opts: [
+      ['产量太多了，裁掉 8 个人', '剩下 2 个人只能各自包办所有工序。分工没了，每根针的成本涨回原样。', 0, -15],
+      ['设卡，不许邻村的别针进来', '村里本来就没多少外来别针，仓库照样是满的。邻村反过来挡了你们的麦子。', 0, -5],
+      ['花钱修一条通往港口的路', '别针卖到了沿海的十几个城镇。买主多了，作坊又添了工序和工人。', -15, 25]
+    ],
+    best: 2,
+    q: '“分工的程度，总要受市场范围的限制。”',
+    say: '一个小村子养不起专做别针的人，更养不起十八道工序。能卖给多少人，决定了能分多细的工。所以最早富起来的，总是水路方便的沿海和沿河地区。',
+    src: '卷一 第三章'
+  },
+  {
+    key: '自利与价格', title: '面包涨价',
+    text: '港口繁荣起来，城里人口猛增，面包不够吃，价格翻了一倍。人群聚在你的官邸外面。',
+    opts: [
+      ['什么命令都不下', '面包贵，意味着做面包特别赚钱。几个月里新开了几十家面包铺，农夫改种小麦。面包多了，价格落回原来的水平附近。', 0, 10],
+      ['下令限价：面包不许涨', '按这个价，多烤一炉并不划算，没人愿意新开面包铺。面包还是那么多，只是变成了长队和黑市。', 0, -12],
+      ['由你指派 300 个鞋匠改行烤面包', '你并不知道究竟缺多少面包。结果面包多得发霉，鞋又涨价了。', 0, -6]
+    ],
+    best: 0,
+    q: '“我们的晚餐，不是出自屠夫、酿酒师或面包师的恩惠，而是出自他们对自身利益的打算。”',
+    say: '价格高过“自然价格”，利润就会把人和资本吸引过来，直到价格回落。没有人指挥，也不需要谁心怀善意。斯密后来把这种力量比作一只“看不见的手”。',
+    src: '卷一 第二章、第七章；卷四 第二章'
+  },
+  {
+    key: '工资', title: '工人要涨工钱',
+    text: '生意越来越好，到处都缺人手，工人开始要求加工钱。几位大作坊主联名上书，请你立法规定工钱的上限，“免得工人被惯坏，也免得货物涨价”。',
+    opts: [
+      ['立法：工钱不得超过去年的水平', '作坊主省了钱。手艺最好的工人陆续去了邻国，留下来的吃不饱，也没心思多干。', 0, -10],
+      ['不立法，让作坊主们自己争着雇人', '缺人的作坊只好加钱抢人。工人吃得好了，干得更卖力，孩子也养得活了。买得起别针和面包的人也多了。', 0, 10],
+      ['禁止工人结伙要价，作坊主照常商议', '工人不敢开口，工钱被一致压在刚够糊口的水平。法律只管住了一边。', 0, -8]
+    ],
+    best: 1,
+    q: '“一个社会，如果绝大部分成员贫穷而悲惨，就决不能说它繁荣幸福。”',
+    say: '斯密把工钱上涨看作国家正在变富的标志，而不是麻烦；报酬优厚的工人更勤快。他还指出，雇主们一直有一种不声张的默契来压低工钱，法律却只禁止工人联合。',
+    src: '卷一 第八章'
+  },
+  {
+    key: '垄断', title: '行会的请求',
+    text: '面包师行会的会长带着礼物来了。他请求：只有行会发了执照的人才能开面包铺，学徒必须学满七年，“为了保证质量”。作为回报，行会每年向国库缴一大笔钱。',
+    opts: [
+      ['批准。国库有进项，质量也有保证', '新人进不来，老面包师不必再担心竞争。面包长期比该有的价格贵，国库收到的钱，其实是全城人多付的面包钱。', 15, -12],
+      ['批准，同时由官府规定面包价格', '行会坐下来和官员商量“合理价格”，定出来的价比原来还高。', 15, -18],
+      ['拒绝。谁想开面包铺都可以', '行会很不高兴。面包铺越开越多，价格被互相压到刚好够本，外加一点正常利润。', 0, 10]
+    ],
+    best: 2,
+    q: '“同行的人很少聚在一起，哪怕只是为了消遣；可一旦聚会，谈话的结果往往是对付公众的合谋，或是抬高价格的办法。”',
+    say: '斯密信任的不是商人，而是商人之间的竞争。他对垄断、行会和特许的批评，比对政府的批评还要尖刻。',
+    src: '卷一 第十章'
+  },
+  {
+    key: '节俭与资本', title: '赚到的钱往哪去',
+    text: '别针作坊主们发了财。他们来问你：钱该怎么用，才算对国家有好处？宫里有人说，富人多花钱，穷人才有活干。',
+    opts: [
+      ['多办宴会，多雇仆人和乐师', '钱确实花出去了，养活了一批仆人。宴会散了，什么也没留下，明年还得从头再来。', 0, -5],
+      ['把利润投回去：添机器，多雇工人', '新机器和新工人明年做出更多的货，卖掉以后又是一笔可以再投的钱。雪球滚了起来。', 0, 20],
+      ['把金币埋进地窖，以防万一', '钱很安全，也什么都没做。', 0, 0]
+    ],
+    best: 1,
+    q: '“资本因节俭而增加，因奢侈和妄为而减少。”',
+    say: '同样一笔钱，雇工人做别针，别针卖出去钱还在；雇仆人，服务做完钱就没了。斯密说，每个挥霍的人都是公众的敌人，每个节俭的人都是公众的恩人。他最担心的挥霍者其实是政府。',
+    src: '卷二 第三章'
+  },
+  {
+    key: '银行与纸币', title: '银行家的提议',
+    text: '一位银行家求见：金银又重又贵，不如让银行发行纸币，随时可以兑回金银。省下来的金银可以拿去国外买原料和机器。',
+    opts: [
+      ['禁止。只有金银才是真钱', '一切照旧。大量金银继续躺在钱袋和柜台里，只为了让买卖转得动。', 0, 0],
+      ['允许，但必须随时兑现，并禁止发行小面额钞票', '纸币在商人之间流通，换下来的金银买回了原料和工具。有一家银行发得太多，被挤兑倒闭，没有波及普通百姓。', 0, 12],
+      ['好主意，那就由国库自己印，想印多少印多少', '头一年人人觉得发了财。第三年物价翻了几倍，没人再肯收纸币。', 20, -15]
+    ],
+    best: 1,
+    q: '纸币像是在空中开出了一条车道，让原来的大路可以改成良田；可这样的商业，是悬在“代达罗斯的翅膀”上的。',
+    say: '斯密赞成银行和纸币，同时赞成管住它。他把限制银行比作要求房屋之间砌防火墙：为了全社会的安全，少数人的自由可以受限制。',
+    src: '卷二 第二章'
+  },
+  {
+    key: '财产与勤劳', title: '收成很差的大庄园',
+    text: '全国最好的土地属于几位大贵族，由农奴耕种。农奴种出来的一切都归主人，收成一年不如一年。',
+    opts: [
+      ['多派监工，偷懒的人挨鞭子', '监工一转身，锄头就停了。你又多养了一批不种地的人。', 0, -5],
+      ['让农奴成为自由佃农：交完固定的租，多收的归自己，租约长期有效', '多收一斗就是自己的一斗。佃农开始挖渠、施肥、修篱笆，因为他们知道十年后这块地还是自己在种。', 0, 15],
+      ['由官府规定每块地种什么、种多少', '官员在城里定的计划，赶不上每块地的土质和每年的天气。', 0, -8]
+    ],
+    best: 1,
+    q: '“一个不能获得任何财产的人，除了尽量多吃、尽量少干之外，不会有别的利益。”',
+    say: '斯密认为奴隶和农奴的劳动看似不花钱，其实最贵。人只有在保得住自己劳动成果的时候才会用心，所以稳定的产权和长期的租约，比任何监督都管用。',
+    src: '卷三 第二章'
+  },
+  {
+    key: '财富不是金银', title: '金银外流',
+    text: '邻国的布又好又便宜，商人成船地买回来，付出去的是金银。财政大臣脸色发白：国库的金银在减少，国家正在变穷！',
+    opts: [
+      ['对外国布征重税，把金银留在国内', '金银留住了。全国人改穿又贵又差的本国布，本该去酿酒的人被留在了织布机旁。邻国随即对你们的酒征了同样的税。', 20, -15],
+      ['不管，让商人自由买卖', '金银流出去一些。百姓穿上了便宜的布，省下的钱买了别的东西。本国人专心酿自己最拿手的酒卖给邻国，金银又流回来一部分。', -15, 20],
+      ['布可以买，但禁止金银出境', '商人把金币缝进衣服里带出去。你多养了一批海关官员，贸易少了一半。', 10, -10]
+    ],
+    best: 1,
+    q: '“如果外国供应某种商品，比我们自己制造还便宜，那就最好用我们擅长的产业生产出来的一部分东西，去向他们买。”',
+    say: '金银只是用来交换的工具。把金银当成财富本身，是斯密花了整整一卷去反驳的“重商主义”。',
+    src: '卷四 第一章、第二章'
+  },
+  {
+    key: '特许公司', title: '东方贸易公司',
+    text: '一群大商人请求一张特许状：只有他们的公司可以和东方做生意，别人不许插手。作为回报，公司每年给国库分红。',
+    opts: [
+      ['授予独占特许', '茶叶和香料只此一家，价格由公司说了算。公司在海外养兵、打仗、亏空，然后回来找国库救济。', 15, -12],
+      ['东方贸易向所有商人开放', '几十家商号抢着出海。茶叶便宜了一半，本国的货也多了买主。', 0, 12],
+      ['那就由国家自己来经营', '官员花的不是自己的钱，账目一年比一年难看。', -10, -8]
+    ],
+    best: 1,
+    q: '“这类独占公司，无论从哪方面看，都是祸害。”',
+    say: '斯密写书时，东印度公司正统治着孟加拉。他认为商人来当统治者是最糟的统治者，而殖民地贸易的独占只让少数商人得利，代价由全国人承担。',
+    src: '卷四 第七章'
+  },
+  {
+    key: '国防的例外', title: '邻国的舰队',
+    text: '邻国的船造得又好又便宜，你们的货大半由邻国的船来运。可邻国的海军越来越强，两国关系也越来越僵。',
+    opts: [
+      ['便宜就好，继续全部用邻国的船', '运费确实最低。开战那年，港口被封锁，你既没有船，也没有会开船的水手。', 0, -15],
+      ['规定本国的货必须由本国的船运，哪怕贵一些', '运费涨了，货物贵了一点。你有了自己的船队和几千名水手，邻国没有轻举妄动。', -5, -3],
+      ['以防万一，对所有外国货一律加税', '船没有多一条，百姓买什么都贵了。', 10, -12]
+    ],
+    best: 1,
+    q: '“国防比富裕重要得多。”',
+    say: '这是斯密自己给自由贸易划出的例外。他承认英国的《航海条例》让贸易吃了亏，却说它也许是英国最明智的商业法规。注意这一步货物是减少的：他并不认为财富是唯一的目标。',
+    src: '卷四 第二章'
+  },
+  {
+    key: '政府的本分', title: '国库的钱怎么花',
+    text: '国库里还有一笔钱，三位大臣各有主张。无论选哪个，这笔钱都会花掉。',
+    opts: [
+      ['建一座配得上国王的宫殿', '宫殿很壮观。钱花在了仆役、乐师和庆典上，花完就没有了，没有留下任何能继续生产的东西。', -30, 0],
+      ['修桥铺路，设法庭保护契约，办平民学校', '货物运得更远，生意人敢和陌生人签约，整天重复一道工序的工人也能读书识字。这些事没有哪个商人愿意独自出钱，却对所有人有利。', -30, 25],
+      ['补贴你最看好的丝绸业', '丝绸商拿到了补贴，把工人和资本从别的行业吸了过来。可这里做丝绸本来就不划算，全国人在为它倒贴。', -30, -5]
+    ],
+    best: 1,
+    q: '斯密给君主留了三件事：抵御外敌，建立公正的司法，兴办那些对社会极有益、却没有哪个人能从中获利的公共工程和机构。',
+    say: '他并不主张政府什么都不管，道路、桥梁和平民教育都在这张清单里。清单之外的事，他不相信有哪位大臣比当事人自己更清楚钱该往哪里投。',
+    src: '卷四 第九章；卷五 第一章'
+  },
+  {
+    key: '赋税四原则', title: '该收税了',
+    text: '路修了，法庭和学校也办了，国库见了底。这些开支每年都要有，你得定一套收税的办法。',
+    opts: [
+      ['把收税权包给出价最高的商人，他怎么收你不过问', '国库马上拿到一大笔钱。包税人为了回本，向百姓收了三倍，还养着一支自己的税吏队伍。', 10, -12],
+      ['按各人收入的比例收，数额和日期事先写明，在纳税人手头方便的时候收', '没有人喜欢交税，但人人知道该交多少、什么时候交，税吏无从勒索，征收的花费也最小。', 15, -2],
+      ['对盐和面包这些人人离不开的东西征重税', '税很好收。最穷的人负担最重，工钱被迫上涨，所有货物跟着变贵。', 15, -10]
+    ],
+    best: 1,
+    q: '赋税四原则：按各人的能力分担；数额和时间确定，不能任意；在纳税人最方便的时候、用最方便的方式收；征收的费用尽量小。',
+    say: '斯密不反对收税，政府要做上一件事里那三项本分，就得有收入。他反对的是任意、扰民、收十文只有六文进国库的收法。',
+    src: '卷五 第二章'
+  }
+];
+
+const BOOKS = [[0, '卷一', '劳动生产力为什么会提高'], [5, '卷二', '资本'], [7, '卷三', '各国走向富裕的不同道路'], [8, '卷四', '重商主义'], [11, '卷五', '国家的收入和开支']];
+const bookOf = i => BOOKS.filter(b => b[0] <= i).pop();
+const BEST = LEVELS.reduce((t, L) => ({ gold: t.gold + L.opts[L.best][2], goods: t.goods + L.opts[L.best][3] }), { gold: 100, goods: 100 });
+
+const $ = id => document.getElementById(id);
+let picks = [];
+let stage = 'ask'; // ask | shown | end
+
+const totals = upto => picks.slice(0, upto).reduce((t, p, i) => {
+  const o = LEVELS[i].opts[p];
+  return { gold: t.gold + o[2], goods: Math.max(5, t.goods + o[3]) };
+}, { gold: 100, goods: 100 });
+
+const delta = (v, label) => v === 0 ? '' : `<span class="tag ${v > 0 ? 'up' : 'down'}">${label} ${v > 0 ? '+' : '−'}${Math.abs(v)}</span>`;
+
+function ledger() {
+  const answered = stage === 'ask' ? picks.length : picks.length;
+  const t = totals(answered);
+  const w = v => Math.max(2, Math.min(100, v / (BEST.goods + 10) * 100)).toFixed(1);
+  $('ledger').innerHTML = `
+    <div class="meter gold"><span>国库金银</span><div class="bar"><i style="width:${w(t.gold)}%"></i></div><b>${t.gold}</b></div>
+    <div class="meter goods"><span>百姓能消费的货物</span><div class="bar"><i style="width:${w(t.goods)}%"></i></div><b>${t.goods}</b></div>`;
+}
+
+function render() {
+  const i = stage === 'ask' ? picks.length : picks.length - 1;
+  if (!$('ledger').children.length) ledger();
+  if (stage === 'end') return renderEnd();
+  const L = LEVELS[i];
+  $('prog').textContent = `第 ${i + 1} 件事 / 共 ${LEVELS.length} 件`;
+  const bk = bookOf(i);
+  let h = `<p class="eyebrow">${bk[1]}　${bk[2]}</p><h1>${L.title}</h1><p>${L.text}</p><div class="opts">`;
+  if (stage === 'ask') {
+    h += L.opts.map((o, k) => `<button class="opt" type="button" data-k="${k}">${o[0]}</button>`).join('');
+    h += '</div>';
+  } else {
+    const mine = picks[i];
+    h += L.opts.map((o, k) => `<div class="opt${k === mine ? ' mine' : ''}">
+      <span class="what">${o[0]}</span>
+      <span class="tags">${k === mine ? '<span class="tag you">你的选择</span>' : ''}${k === L.best ? '<span class="tag smith">斯密的选择</span>' : ''}${delta(o[2], '金银')}${delta(o[3], '货物')}</span>
+      <span class="then">${o[1]}</span></div>`).join('');
+    h += `</div><div class="smithbox"><h2>斯密怎么看：${L.key}</h2><p class="q">${L.q}</p><p>${L.say}</p><p class="src">《国富论》${L.src}，引文为大意</p></div>
+      <button class="go" id="go" type="button">${i + 1 < LEVELS.length ? '下一件事' : '看结算'}</button>`;
+  }
+  $('card').innerHTML = h;
+  // 让进度条从旧值滑到新值
+  requestAnimationFrame(ledger);
+}
+
+function renderEnd() {
+  const t = totals(LEVELS.length), right = picks.filter((p, i) => p === LEVELS[i].best).length;
+  const verdict = t.goods >= BEST.goods - 30 ? '你和斯密想到一块去了。'
+    : t.goods >= 160 ? '一半是斯密，一半是重商主义。'
+    : '你是一位标准的重商主义大臣：盯着国库，百姓却变穷了。';
+  $('prog').textContent = '结算';
+  $('card').innerHTML = `<h1>${verdict}</h1>
+    <div><div class="score">${t.goods}</div><p class="note">百姓能消费的货物（开局是 100，最高 ${BEST.goods}）。国库金银最后是 ${t.gold}。</p></div>
+    <p>这个游戏只按一个数字算分：百姓能消费的货物。国库里的金银一分不算。</p>
+    <p>这正是《国富论》开篇给财富下的定义：一个国家的财富，是它每年的劳动生产出来、供人民消费的全部必需品和便利品，不是国王金库里的金银。照斯密的办法走完全程，国库只剩 ${BEST.gold}，货物却接近开局的三倍。</p>
+    <div class="recap">${LEVELS.map((L, i) => `<div><span>${bookOf(i)[1]}　${L.key}</span><span class="${picks[i] === L.best ? 'ok' : 'no'}">${picks[i] === L.best ? '与斯密一致' : '与斯密不同'}</span></div>`).join('')}</div>
+    <p class="note">${LEVELS.length} 件事里你有 ${right} 件和斯密选得一样。五卷书各挑了几件事，分数是为游戏编的。书里还谈了货币的起源、地租、公债，也谈了分工的代价：一辈子只做一道工序的人会变得迟钝，所以他主张办平民教育。</p>
+    <button class="go" id="again" type="button">再当一次大臣</button>`;
+  ledger();
+}
+
+$('card').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.k !== undefined && stage === 'ask') { picks.push(+b.dataset.k); stage = 'shown'; }
+  else if (b.id === 'go') stage = picks.length < LEVELS.length ? 'ask' : 'end';
+  else if (b.id === 'again') { picks = []; stage = 'ask'; }
+  else return;
+  render();
+  if (b.id) window.scrollTo({ top: 0 });
+};
+
+function start(d) {
+  if (Array.isArray(d.picks) && d.picks.length <= LEVELS.length && d.picks.every((p, i) => LEVELS[i].opts[p])) {
+    picks = d.picks;
+    stage = ['ask', 'shown', 'end'].includes(d.stage) ? d.stage : 'ask';
+    if (stage === 'shown' && !picks.length) stage = 'ask';
+    if (stage === 'end' && picks.length < LEVELS.length) stage = 'ask';
+    if (stage === 'ask' && picks.length === LEVELS.length) stage = 'end';
+  }
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({ picks, stage }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>

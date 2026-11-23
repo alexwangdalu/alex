@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>再问一层</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* 布局：一个现象，一层一层往下挖。每层的结尾是下一个问题，越深颜色越暗，最底下是没人知道答案的地方。 */
+:root {
+  --bg: #f1f5f8;
+  --fg: #0e2233;
+  --muted: #4d6274;
+  --chip: #dde6ee;
+  --l1: #d8e8f4; --l1-fg: #0e2233;
+  --l2: #a6cae6; --l2-fg: #0b1f30;
+  --l3: #23608f; --l3-fg: #ffffff;
+  --l4: #0f304e; --l4-fg: #eef5fb;
+  --edge: #07182a; --edge-fg: #ffc46b;
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-fig: "Space Grotesk", "Noto Sans SC", "PingFang SC", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
+    --l1: #2c4c66; --l1-fg: #f2f7fb;
+    --l2: #213d55; --l2-fg: #eef5fb;
+    --l3: #172e42; --l3-fg: #e8f0f6;
+    --l4: #0f2233; --l4-fg: #e8f0f6;
+    --edge: #050c13; --edge-fg: #ffc46b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
+  --l1: #2c4c66; --l1-fg: #f2f7fb;
+  --l2: #213d55; --l2-fg: #eef5fb;
+  --l3: #172e42; --l3-fg: #e8f0f6;
+  --l4: #0f2233; --l4-fg: #e8f0f6;
+  --edge: #050c13; --edge-fg: #ffc46b;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+.mark { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; margin: 0; }
+.sub { margin: 0; color: var(--muted); }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button {
+  font: inherit; cursor: pointer; border: 0; border-radius: 999px;
+  padding: 8px 16px; background: var(--chip); color: var(--fg);
+}
+.tabs button[aria-pressed="true"] { background: var(--fg); color: var(--bg); font-weight: 700; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--edge-fg); outline-offset: 2px; }
+
+.stack { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; }
+.layer, .ask, .edge { padding: 26px 22px; background: var(--b); color: var(--f); }
+.d1 { --b: var(--l1); --f: var(--l1-fg); }
+.d2 { --b: var(--l2); --f: var(--l2-fg); }
+.d3 { --b: var(--l3); --f: var(--l3-fg); }
+.d4 { --b: var(--l4); --f: var(--l4-fg); }
+.layer { display: flex; flex-direction: column; gap: 14px; }
+.layer.new { animation: sink .5s ease; }
+@keyframes sink { from { opacity: .3; transform: translateY(-10px); } }
+
+.tag { font-family: var(--font-fig); font-size: .8125rem; letter-spacing: .12em; margin: 0; opacity: .8; }
+.layer h1, .layer h2 { font-family: var(--font-display); font-weight: 900; line-height: 1.35; margin: 0; text-wrap: balance; }
+.layer h1 { font-size: clamp(1.75rem, 7vw, 2.25rem); }
+.layer h2 { font-size: 1.375rem; }
+.fig { font-family: var(--font-fig); font-weight: 700; font-size: clamp(1.75rem, 8vw, 2.5rem); line-height: 1.2; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.fig small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .875rem; opacity: .8; margin-top: 4px; }
+.layer p { margin: 0; font-size: 1.0625rem; line-height: 1.85; max-width: 34em; }
+.layer p.tag { font-size: .8125rem; line-height: 1.4; }
+
+.ask {
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+  width: 100%; border: 0; cursor: pointer; text-align: left; font: inherit;
+}
+.ask b { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; line-height: 1.4; }
+.ask:hover b { text-decoration: underline; text-underline-offset: 4px; }
+.edge { --b: var(--edge); --f: var(--edge-fg); display: flex; flex-direction: column; gap: 8px; }
+.edge b { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; line-height: 1.5; text-wrap: balance; }
+
+/* 向日葵实验 */
+.lab { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.lab canvas { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; }
+.lab input[type="range"] { width: 100%; max-width: 320px; accent-color: currentColor; }
+.lab .read { font-family: var(--font-fig); font-weight: 700; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.lab .presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.lab .presets button {
+  font: inherit; font-size: .9375rem; cursor: pointer; border-radius: 999px; padding: 6px 14px;
+  background: transparent; color: inherit; border: 1.5px solid currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) { .layer.new { animation: none; } }
+</style>
+</head>
+<body>
+
+<main>
+  <header>
+    <p class="mark">再问一层</p>
+    <p class="sub">每个答案下面，都还压着一个问题。一直问下去，会走到没人知道答案的地方。</p>
+  </header>
+  <div class="tabs" id="tabs"></div>
+  <div class="stack" id="stack"></div>
+</main>
+
+<script>
+const LAB = `<div class="lab">
+  <canvas id="sf" aria-label="按当前角度排出的 500 颗种子"></canvas>
+  <div class="read" id="sfRead"></div>
+  <input type="range" id="sfAngle" min="130" max="145" step="0.1" aria-label="每颗种子转过的角度">
+  <div class="presets"><button type="button" data-a="135">135°（3/8 圈）</button><button type="button" data-a="137.5">137.5°</button><button type="button" data-a="144">144°（2/5 圈）</button></div>
+</div>`;
+
+const topics = [
+  {
+    tab: '天空',
+    q: '天空为什么是蓝的？',
+    layers: [
+      { fig: 'I ∝ 1/λ⁴', note: '散射强度与波长的四次方成反比',
+        p: '阳光是所有颜色混在一起的。它撞上空气分子，会被弹向四面八方，这叫散射。波长越短，散射越强：蓝光（450 nm）被散射的强度大约是红光（700 nm）的 6 倍。于是蓝光洒满了整个天空，而红光大多笔直穿了过去。',
+        ask: '紫光的波长更短，天空为什么不是紫色？' },
+      { p: '三件事叠在一起：太阳发出的紫光本来就比蓝光少；高层大气又吸收掉一部分；最关键的是，你眼睛里的三种视锥细胞对紫光很迟钝。天空射来的其实是一大堆波长的混合，是大脑把它概括成了一个字：蓝。',
+        ask: '那“蓝”到底在哪里？在光里，还是在脑子里？' },
+      { fig: '红 + 绿 = 黄', note: '屏幕上的黄色里，没有一点黄光',
+        p: '光只有波长，没有颜色。颜色是大脑根据三种视锥细胞的信号比例算出来的。把屏幕放大看：黄色的地方只有红色和绿色的小灯在亮，你却看见了黄。品红色更彻底，光谱上根本没有对应它的波长，它完全是大脑造出来的。',
+        edge: '你看到的蓝，和别人看到的蓝，是同一种感觉吗？至今没有人知道该用什么实验去检验。' }
+    ]
+  },
+  {
+    tab: '向日葵',
+    q: '向日葵的种子为什么排成螺旋？',
+    layers: [
+      { fig: '34 · 55 · 89', note: '斐波那契数列：每一项是前两项之和',
+        p: '数一数向日葵花盘上的螺旋：顺时针和逆时针的条数几乎总是 34 和 55，或者 55 和 89。松果是 8 和 13，菠萝是 8、13 和 21。它们全是斐波那契数列里相邻的数。',
+        ask: '植物不会数数，这些数字是哪来的？' },
+      { p: '种子从花盘中心一颗一颗长出来。每一颗都比上一颗多转过一个固定的角度，然后被后来者往外推。植物只做这一件事。下面是 500 颗种子，你来当植物，换个角度试试：', lab: true,
+        ask: '只差 1° 就散架了。为什么偏偏是 137.5°？' },
+      { fig: '360° ÷ φ² ≈ 137.5°', note: 'φ ≈ 1.618，黄金比例',
+        p: '如果每次转的是一圈的简单分数，比如 2/5 圈，那么每 5 颗种子就回到同一个方向，排成 5 条直线，中间全是浪费的空隙。想不留空隙，就得用一个最不像分数的比例。数学上可以证明，最难用分数去逼近的数正是黄金比例 φ。而斐波那契数相邻两项的比值，恰好是 φ 最好的分数近似，所以你数出来的总是它们。',
+        ask: '可植物是怎么“找到”这个角度的？' },
+      { p: '没有谁去找。新的芽点总是长在离旧芽点最远、最空的位置：旧芽点会抽走周围的生长素，新芽只能在剩得最多的地方冒出来。只要反复执行“往最空的地方长”这一条规则，角度就自动收敛到 137.5°。1992 年，两位物理学家让磁性液滴在磁场里互相排斥着落下，得到了一模一样的螺旋。一点生物学都不需要。',
+        edge: '一条简单的局部规则就能长出向日葵。斑马的条纹、你的指纹、大脑的沟回，还有多少形状是这样自己长出来的？' }
+    ]
+  },
+  {
+    tab: '太阳',
+    q: '太阳为什么能亮这么久？',
+    layers: [
+      { fig: '400 万吨 / 秒', note: '太阳每秒变成能量的质量，E = mc²',
+        p: '太阳不是在烧。如果它是一整团煤，几千年就烧完了。它靠的是核聚变：每秒把大约 6 亿吨氢聚变成氦，其中约 400 万吨质量直接消失，变成了光和热。',
+        ask: '质子都带正电，互相排斥。它们怎么撞得到一起？' },
+      { fig: '1500 万 K ≪ 100 亿 K', note: '太阳核心的温度 与 硬闯所需的温度',
+        p: '按经典物理，撞不到。要靠热运动的速度硬冲过电排斥力，大约需要 100 亿度，而太阳核心只有 1500 万度。照这么算，太阳太冷了，根本不该发光。',
+        ask: '那它为什么亮着？' },
+      { p: '量子隧穿。质子不只是一颗小球，也是一团概率波，它有极小的机会直接出现在那堵它翻不过去的墙的另一边。这个机会小到：核心里的一个质子，平均要等上几十亿年才能聚变成功一次。但太阳里有大约 10<sup>57</sup> 个质子，所以每一秒仍有天文数字的反应在发生。',
+        ask: '如果隧穿再容易一点，会怎样？' },
+      { fig: '100 亿年', note: '太阳的寿命，现在刚过一半',
+        p: '太阳会很快把自己烧光。正因为聚变极难发生，它才能稳稳地亮 100 亿年，足够地球上的生命用 40 亿年演化出一个会问这个问题的你。而你身体里的碳、氧、铁，是更早的恒星用同样的办法造出来、又在死亡时撒向太空的。',
+        edge: '这些物理常数为什么恰好是这些数值？稍微改动一点，就既没有恒星，也没有我们。' }
+    ]
+  },
+  {
+    tab: '夜空',
+    q: '夜晚的天为什么是黑的？',
+    layers: [
+      { p: '“因为太阳下山了”并不够。1823 年，天文学家奥伯斯指出一个麻烦：如果宇宙无限大、无限老、到处都有恒星，那么无论你朝哪个方向看，视线最终都会撞上某颗恒星的表面。整个夜空应该和太阳表面一样刺眼。',
+        ask: '远处的星星更暗，这不就解决了吗？' },
+      { fig: '¼ × 4 = 1', note: '每颗暗到四分之一，数量却多到四倍',
+        p: '解决不了。距离加倍，每颗星的亮度降到 1/4；可是那个距离上一层球壳里的星星数量，正好变成 4 倍。两者刚好抵消，每一层贡献的光一样多。无限多层加起来，天空就该亮得没有边。',
+        ask: '那夜空凭什么是黑的？' },
+      { fig: '138 亿年', note: '宇宙的年龄',
+        p: '因为前提错了：宇宙不是无限老。光速有限，我们只能看到 138 亿年之内来得及赶到的光，更远的星光还在路上。况且宇宙在膨胀，远方来的光一路被拉长，变成了眼睛看不见的红外线和微波。',
+        ask: '那些被拉长的光，现在还在吗？' },
+      { fig: '2.725 K', note: '宇宙微波背景的温度',
+        p: '还在。天空的每个方向都有一层微弱的微波，那是宇宙 38 万岁时发出的光，一直走到今天。老式电视没有信号时的雪花点，大约有 1% 就来自它。所以夜空并不是真的黑，它只是亮在你看不见的波段。你抬头看到的黑暗，本身就是宇宙有过一个开端的证据。',
+        edge: '开端之前是什么？“之前”这个词，在那里还有意义吗？' }
+    ]
+  },
+  {
+    tab: '咖啡',
+    q: '热咖啡为什么只会变凉？',
+    layers: [
+      { p: '热量总是从热的地方流向冷的地方，从不反过来。怪的是，能量守恒并不反对反过来：周围的空气把热量还给咖啡，让它自己重新变烫，能量照样一分不差。',
+        ask: '那是哪条定律不允许？' },
+      { p: '没有哪条定律不允许。在微观上，分子碰撞是可逆的：把一段分子互相碰撞的录像倒着放，每一次碰撞依然完全符合物理定律。咖啡自己变烫并非不可能，只是不太可能。',
+        ask: '有多不可能？' },
+      { fig: 'S = k ln W', note: '熵 = 微观排列方式数目的对数（玻尔兹曼）',
+        p: '这是一道数数题。让能量均匀散开的分子排列方式，比让能量集中在杯子里的排列方式多得多。抛 100 枚硬币全是正面的概率约为 10<sup>−30</sup>，而一杯咖啡里有大约 10<sup>25</sup> 个分子。分子只是在随机乱撞，自然就撞进了占压倒多数的那一类状态里。',
+        ask: '所以“时间往前走”，只是概率？' },
+      { p: '很大程度上是。碎掉的杯子不会复原，你记得昨天却不记得明天，背后都是同一件事：熵在增加。但这只是把问题往回推了一步。熵能一直增加到今天，说明宇宙刚开始的时候，熵低得离谱。',
+        edge: '宇宙为什么从一个极其有序的状态开始？这是物理学最大的未解问题之一。' }
+    ]
+  }
+];
+
+const $ = id => document.getElementById(id);
+let t = 0, shown = topics.map(() => 1), angle = 137.5;
+
+function drawSeeds() {
+  const c = $('sf');
+  if (!c) return;
+  const size = c.clientWidth || 300, dpr = window.devicePixelRatio || 1;
+  c.width = c.height = Math.round(size * dpr);
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = getComputedStyle(c).color;
+  const N = 500, R = size / 2 - 5, a = angle * Math.PI / 180;
+  for (let k = 1; k <= N; k++) {
+    const r = R * Math.sqrt(k / N);
+    ctx.beginPath();
+    ctx.arc(size / 2 + r * Math.cos(k * a), size / 2 + r * Math.sin(k * a), size / 115, 0, 7);
+    ctx.fill();
+  }
+  $('sfRead').textContent = angle.toFixed(1) + '°';
+}
+
+function render(scrollToNew) {
+  const topic = topics[t], n = shown[t];
+  $('tabs').innerHTML = topics.map((x, i) => `<button type="button" data-i="${i}" aria-pressed="${i === t}">${x.tab}</button>`).join('');
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const L = topic.layers[i];
+    const head = i === 0 ? `<h1>${topic.q}</h1>` : `<h2>${topic.layers[i - 1].ask}</h2>`;
+    html += `<section class="layer d${i + 1}${scrollToNew && i === n - 1 ? ' new' : ''}">
+      <p class="tag">第 ${i + 1} 层</p>${head}
+      ${L.fig ? `<div class="fig">${L.fig}<small>${L.note}</small></div>` : ''}
+      <p>${L.p}</p>${L.lab ? LAB : ''}</section>`;
+  }
+  const last = topic.layers[n - 1];
+  html += last.ask
+    ? `<button class="ask d${n + 1}" id="ask" type="button"><span class="tag">再问一层 ↓</span><b>${last.ask}</b></button>`
+    : `<div class="edge"><span class="tag">已知的边缘</span><b>${last.edge}</b></div>`;
+  $('stack').innerHTML = html;
+
+  if ($('sfAngle')) {
+    $('sfAngle').value = angle;
+    $('sfAngle').oninput = e => { angle = +e.target.value; drawSeeds(); };
+    document.querySelectorAll('.presets button').forEach(b => b.onclick = () => { angle = +b.dataset.a; $('sfAngle').value = angle; drawSeeds(); });
+    drawSeeds();
+  }
+  if ($('ask')) $('ask').onclick = () => { shown[t]++; render(true); };
+  if (scrollToNew) {
+    const el = document.querySelector('.layer.new');
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (el) el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
+  }
+}
+
+$('tabs').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  t = +b.dataset.i;
+  render(false);
+};
+window.addEventListener('resize', drawSeeds);
+
+function start(d) {
+  if (Number.isInteger(d.t) && topics[d.t]) t = d.t;
+  if (Array.isArray(d.shown) && d.shown.length === topics.length) shown = d.shown.map((v, i) => Math.min(Math.max(1, v | 0), topics[i].layers.length));
+  if (typeof d.angle === 'number') angle = d.angle;
+  render(false);
+}
+window.claude?.hot?.snapshot?.(() => ({ t, shown, angle }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
