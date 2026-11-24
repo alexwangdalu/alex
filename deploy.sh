@@ -3,7 +3,7 @@
 # 用法: bash deploy.sh
 set -euo pipefail
 PROJECT="haoqi-lab"
-PAGES="index.html guofu.html qunlun.html biezhen.html"
+PAGES="index.html zaiwen.html guofu.html qunlun.html biezhen.html"
 
 echo "📂 准备发布目录..."
 rm -rf site && mkdir site
@@ -22,7 +22,8 @@ echo "🚀 部署..."
 $WRANGLER pages deploy site --project-name="$PROJECT" --branch=main --commit-dirty=true
 
 echo ""
-echo "✅ 再问一层     → https://${PROJECT}.pages.dev"
+echo "✅ 好奇实验室   → https://${PROJECT}.pages.dev"
+echo "✅ 再问一层     → https://${PROJECT}.pages.dev/zaiwen"
 echo "✅ 首席大臣 1776 → https://${PROJECT}.pages.dev/guofu"
 echo "✅ 群论实验台   → https://${PROJECT}.pages.dev/qunlun"
 echo "✅ 别针王国     → https://${PROJECT}.pages.dev/biezhen"

@@ -3,280 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>再问一层</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap">
+<title>好奇实验室</title>
+<meta name="description" content="五个可以动手玩的小实验：一层层追问、国富论、群论、别针王国、黎曼猜想。">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* 布局：一个现象，一层一层往下挖。每层的结尾是下一个问题，越深颜色越暗，最底下是没人知道答案的地方。 */
+/* 布局：一张实验台清单。每个实验占一整行：左边是它的“标本”小图，右边是引出它的那个问题。 */
 :root {
-  --bg: #f1f5f8;
-  --fg: #0e2233;
-  --muted: #4d6274;
-  --chip: #dde6ee;
-  --l1: #d8e8f4; --l1-fg: #0e2233;
-  --l2: #a6cae6; --l2-fg: #0b1f30;
-  --l3: #23608f; --l3-fg: #ffffff;
-  --l4: #0f304e; --l4-fg: #eef5fb;
-  --edge: #07182a; --edge-fg: #ffc46b;
+  --bg: #f3f5f8;
+  --fg: #101622;
+  --muted: #566176;
+  --line: #d6dce6;
+  --panel: #ffffff;
+  --spark: #ffd84d;      /* 好奇心的颜色：只用在一处高亮上 */
+  --on-spark: #2b2200;
+  --ink-blue: #2462d4;
+  --ink-warm: #c9541c;
+  --ink-green: #17755a;
+  --ink-gold: #a87400;
   --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
   --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --font-fig: "Space Grotesk", "Noto Sans SC", "PingFang SC", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
-    --l1: #2c4c66; --l1-fg: #f2f7fb;
-    --l2: #213d55; --l2-fg: #eef5fb;
-    --l3: #172e42; --l3-fg: #e8f0f6;
-    --l4: #0f2233; --l4-fg: #e8f0f6;
-    --edge: #050c13; --edge-fg: #ffc46b;
+    --bg: #0b0f17; --fg: #e9edf4; --muted: #9aa6b8; --line: #263043; --panel: #121826;
+    --spark: #ffd84d; --on-spark: #2b2200;
+    --ink-blue: #6ea3ff; --ink-warm: #f08a55; --ink-green: #4fc79f; --ink-gold: #e3b341;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0b1219; --fg: #e8f0f6; --muted: #9db0c0; --chip: #1a2a38;
-  --l1: #2c4c66; --l1-fg: #f2f7fb;
-  --l2: #213d55; --l2-fg: #eef5fb;
-  --l3: #172e42; --l3-fg: #e8f0f6;
-  --l4: #0f2233; --l4-fg: #e8f0f6;
-  --edge: #050c13; --edge-fg: #ffc46b;
+  --bg: #0b0f17; --fg: #e9edf4; --muted: #9aa6b8; --line: #263043; --panel: #121826;
+  --spark: #ffd84d; --on-spark: #2b2200;
+  --ink-blue: #6ea3ff; --ink-warm: #f08a55; --ink-green: #4fc79f; --ink-gold: #e3b341;
   color-scheme: dark;
 }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.8; -webkit-font-smoothing: antialiased; }
+h1, h2, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+.wrap { max-width: 64rem; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  padding-block: 28px 56px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
-main { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-header { display: flex; flex-direction: column; gap: 6px; }
-.mark { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; margin: 0; }
-.sub { margin: 0; color: var(--muted); }
+.top { padding-block: 4rem 2.5rem; }
+.kicker { font-family: var(--font-fig); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(3rem, 10vw, 5.5rem); line-height: 1.1; letter-spacing: 0.02em; margin-top: 0.75rem; }
+h1 mark { background: linear-gradient(transparent 62%, var(--spark) 62%); color: inherit; padding-inline: 0.06em; }
+.thesis { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.25rem, 3vw, 1.7rem); line-height: 1.6; margin-top: 1.5rem; max-width: 34rem; text-wrap: balance; }
+.intro { color: var(--muted); margin-top: 1rem; max-width: 36rem; text-wrap: pretty; }
 
-.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.tabs button {
-  font: inherit; cursor: pointer; border: 0; border-radius: 999px;
-  padding: 8px 16px; background: var(--chip); color: var(--fg);
-}
-.tabs button[aria-pressed="true"] { background: var(--fg); color: var(--bg); font-weight: 700; }
-button:focus-visible, input:focus-visible { outline: 3px solid var(--edge-fg); outline-offset: 2px; }
+.bench { border-top: 1px solid var(--fg); }
+.exp { border-bottom: 1px solid var(--line); }
+.exp a { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; padding-block: 2rem; color: inherit; text-decoration: none; align-items: center; }
+@media (min-width: 46rem) { .exp a { grid-template-columns: 13rem minmax(0, 1fr) auto; gap: 2.5rem; padding-block: 2.25rem; } }
+.exp a > * { min-width: 0; }
+.spec { width: 100%; max-width: 13rem; aspect-ratio: 13 / 8; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; display: block; transition: border-color 0.2s, transform 0.2s; }
+.spec svg { display: block; width: 100%; height: 100%; }
+.kind { font-family: var(--font-fig); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); }
+.exp h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.3; margin-top: 0.15rem; }
+.ask { font-weight: 700; margin-top: 0.5rem; text-wrap: pretty; }
+.what { color: var(--muted); font-size: 0.95rem; line-height: 1.75; margin-top: 0.3rem; max-width: 34rem; text-wrap: pretty; }
+.go { font-family: var(--font-fig); font-weight: 700; font-size: 0.95rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem; border: 1px solid var(--fg); border-radius: 999px; justify-self: start; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+.exp a:hover .go, .exp a:focus-visible .go { background: var(--spark); color: var(--on-spark); border-color: var(--spark); }
+.exp a:hover .spec { border-color: var(--fg); transform: translateY(-2px); }
+.exp a:focus-visible { outline: 2px solid var(--ink-blue); outline-offset: 4px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .spec, .go { transition: none; } .exp a:hover .spec { transform: none; } }
 
-.stack { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; }
-.layer, .ask, .edge { padding: 26px 22px; background: var(--b); color: var(--f); }
-.d1 { --b: var(--l1); --f: var(--l1-fg); }
-.d2 { --b: var(--l2); --f: var(--l2-fg); }
-.d3 { --b: var(--l3); --f: var(--l3-fg); }
-.d4 { --b: var(--l4); --f: var(--l4-fg); }
-.layer { display: flex; flex-direction: column; gap: 14px; }
-.layer.new { animation: sink .5s ease; }
-@keyframes sink { from { opacity: .3; transform: translateY(-10px); } }
-
-.tag { font-family: var(--font-fig); font-size: .8125rem; letter-spacing: .12em; margin: 0; opacity: .8; }
-.layer h1, .layer h2 { font-family: var(--font-display); font-weight: 900; line-height: 1.35; margin: 0; text-wrap: balance; }
-.layer h1 { font-size: clamp(1.75rem, 7vw, 2.25rem); }
-.layer h2 { font-size: 1.375rem; }
-.fig { font-family: var(--font-fig); font-weight: 700; font-size: clamp(1.75rem, 8vw, 2.5rem); line-height: 1.2; margin: 4px 0; font-variant-numeric: tabular-nums; }
-.fig small { display: block; font-family: var(--font-body); font-weight: 400; font-size: .875rem; opacity: .8; margin-top: 4px; }
-.layer p { margin: 0; font-size: 1.0625rem; line-height: 1.85; max-width: 34em; }
-.layer p.tag { font-size: .8125rem; line-height: 1.4; }
-
-.ask {
-  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
-  width: 100%; border: 0; cursor: pointer; text-align: left; font: inherit;
-}
-.ask b { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; line-height: 1.4; }
-.ask:hover b { text-decoration: underline; text-underline-offset: 4px; }
-.edge { --b: var(--edge); --f: var(--edge-fg); display: flex; flex-direction: column; gap: 8px; }
-.edge b { font-family: var(--font-display); font-weight: 700; font-size: 1.375rem; line-height: 1.5; text-wrap: balance; }
-
-/* 向日葵实验 */
-.lab { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-.lab canvas { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; }
-.lab input[type="range"] { width: 100%; max-width: 320px; accent-color: currentColor; }
-.lab .read { font-family: var(--font-fig); font-weight: 700; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.lab .presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.lab .presets button {
-  font: inherit; font-size: .9375rem; cursor: pointer; border-radius: 999px; padding: 6px 14px;
-  background: transparent; color: inherit; border: 1.5px solid currentColor;
-}
-
-@media (prefers-reduced-motion: reduce) { .layer.new { animation: none; } }
+.foot { padding-block: 2.5rem 4rem; color: var(--muted); font-size: 0.9rem; max-width: 36rem; }
 </style>
 </head>
 <body>
-
-<main>
-  <header>
-    <p class="mark">再问一层</p>
-    <p class="sub">每个答案下面，都还压着一个问题。一直问下去，会走到没人知道答案的地方。</p>
+<main class="wrap">
+  <header class="top">
+    <p class="kicker">haoqi lab</p>
+    <h1><mark>好奇</mark>实验室</h1>
+    <p class="thesis">每个实验都从一个问题开始。先动手玩，道理会自己冒出来。</p>
+    <p class="intro">这里有五个可以动手的小东西：有的是游戏，有的是能拖能点的图。它们讲的是经济学、数学和“为什么”本身，不需要任何预备知识。</p>
   </header>
-  <div class="tabs" id="tabs"></div>
-  <div class="stack" id="stack"></div>
+
+  <ul class="bench">
+    <li class="exp"><a href="zaiwen.html">
+      <span class="spec" aria-hidden="true"><svg viewBox="0 0 208 128">
+        <rect x="24" y="18" width="160" height="20" rx="3" fill="var(--ink-blue)" opacity="0.18"/>
+        <rect x="24" y="42" width="160" height="20" rx="3" fill="var(--ink-blue)" opacity="0.38"/>
+        <rect x="24" y="66" width="160" height="20" rx="3" fill="var(--ink-blue)" opacity="0.62"/>
+        <rect x="24" y="90" width="160" height="20" rx="3" fill="var(--ink-blue)"/>
+        <text x="104" y="105" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="15" fill="var(--spark)">?</text>
+      </svg></span>
+      <span>
+        <span class="kind">一层层读下去</span>
+        <h2>再问一层</h2>
+        <p class="ask">一直问“为什么”，最后会问到哪里？</p>
+        <p class="what">从一个平常的现象出发，每个答案下面都还压着一个问题。越往下颜色越深，最底下是至今没人知道答案的地方。</p>
+      </span>
+      <span class="go">往下挖 →</span>
+    </a></li>
+
+    <li class="exp"><a href="guofu.html">
+      <span class="spec" aria-hidden="true"><svg viewBox="0 0 208 128">
+        <text x="104" y="60" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="40" fill="var(--fg)">1776</text>
+        <line x1="40" y1="78" x2="168" y2="78" stroke="var(--ink-gold)" stroke-width="2"/>
+        <circle cx="64" cy="98" r="8" fill="none" stroke="var(--ink-gold)" stroke-width="2"/>
+        <circle cx="104" cy="98" r="8" fill="var(--ink-gold)"/>
+        <circle cx="144" cy="98" r="8" fill="none" stroke="var(--ink-gold)" stroke-width="2"/>
+      </svg></span>
+      <span>
+        <span class="kind">做选择的游戏</span>
+        <h2>首席大臣 1776</h2>
+        <p class="ask">国王只说了一句话：让国家富起来。你怎么办？</p>
+        <p class="what">你是一个小王国的首席大臣，从一家别针作坊开始，一道一道做决定。每个选择背后，是亚当·斯密《国富论》里的一个道理。</p>
+      </span>
+      <span class="go">去上任 →</span>
+    </a></li>
+
+    <li class="exp"><a href="biezhen.html">
+      <span class="spec" aria-hidden="true"><svg viewBox="0 0 208 128">
+        <g stroke="var(--ink-green)" stroke-width="2.5" stroke-linecap="round">
+          <line x1="40" y1="96" x2="40" y2="44"/><line x1="62" y1="96" x2="62" y2="44"/><line x1="84" y1="96" x2="84" y2="44"/>
+          <line x1="106" y1="96" x2="106" y2="44"/><line x1="128" y1="96" x2="128" y2="44"/><line x1="150" y1="96" x2="150" y2="44"/><line x1="172" y1="96" x2="172" y2="44"/>
+        </g>
+        <g fill="var(--ink-green)"><circle cx="40" cy="40" r="5"/><circle cx="62" cy="40" r="5"/><circle cx="84" cy="40" r="5"/><circle cx="106" cy="40" r="5"/><circle cx="128" cy="40" r="5"/><circle cx="150" cy="40" r="5"/></g>
+        <circle cx="172" cy="40" r="5" fill="var(--spark)" stroke="var(--ink-green)" stroke-width="2"/>
+      </svg></span>
+      <span>
+        <span class="kind">越点越多的游戏</span>
+        <h2>别针王国</h2>
+        <p class="ask">十个人分工做针，为什么能比各做各的多出两百多倍？</p>
+        <p class="what">从亲手点出第一根别针开始，雇人、分工、开拓市场，目标是全国每秒卖出 48,000 根。这个数字来自斯密在书里记下的那家作坊。</p>
+      </span>
+      <span class="go">做第一根 →</span>
+    </a></li>
+
+    <li class="exp"><a href="qunlun.html">
+      <span class="spec" aria-hidden="true"><svg viewBox="0 0 208 128">
+        <rect x="74" y="34" width="60" height="60" fill="none" stroke="var(--fg)" stroke-width="2"/>
+        <circle cx="74" cy="34" r="6" fill="var(--spark)" stroke="var(--fg)" stroke-width="1.5"/>
+        <path d="M150 40 A 52 52 0 0 1 150 88" fill="none" stroke="var(--ink-blue)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M150 88 l-2 -11 l10 5 z" fill="var(--ink-blue)"/>
+        <line x1="104" y1="20" x2="104" y2="108" stroke="var(--ink-warm)" stroke-width="2" stroke-dasharray="5 5"/>
+      </svg></span>
+      <span>
+        <span class="kind">可以摆弄的实验台</span>
+        <h2>群论实验台</h2>
+        <p class="ask">把一个正方形转一转、翻一翻，一共有多少种摆法？</p>
+        <p class="what">群论研究的是对称。先别管定义，拿一个形状玩一会儿：转、翻、再转，把所有摆法连成一张地图，乘法表会自己长出来。</p>
+      </span>
+      <span class="go">转一下 →</span>
+    </a></li>
+
+    <li class="exp"><a href="riemann/index.html">
+      <span class="spec" aria-hidden="true"><svg viewBox="0 0 208 128">
+        <line x1="24" y1="104" x2="184" y2="104" stroke="var(--line)" stroke-width="1.5"/>
+        <line x1="104" y1="14" x2="104" y2="114" stroke="var(--ink-gold)" stroke-width="2.5"/>
+        <g fill="var(--panel)" stroke="var(--ink-gold)" stroke-width="2"><circle cx="104" cy="88" r="5"/><circle cx="104" cy="66" r="5"/><circle cx="104" cy="53" r="5"/><circle cx="104" cy="36" r="5"/><circle cx="104" cy="28" r="5"/></g>
+        <path d="M30 96 h18 v-10 h14 v-10 h22 v-10 h10" fill="none" stroke="var(--ink-blue)" stroke-width="2"/>
+        <path d="M118 62 h14 v-10 h24 v-10 h22" fill="none" stroke="var(--ink-blue)" stroke-width="2"/>
+      </svg></span>
+      <span>
+        <span class="kind">十二张能动手的图</span>
+        <h2>黎曼猜想图解</h2>
+        <p class="ask">质数看起来毫无规律，背后真的有一份乐谱吗？</p>
+        <p class="what">拖动滑块，看质数的台阶怎样从一串“音符”里长出来，再看这个 167 年的难题为什么重要，以及 2026 年公布的证明意味着什么。</p>
+      </span>
+      <span class="go">看乐谱 →</span>
+    </a></li>
+  </ul>
+
+  <p class="foot">这些页面都在浏览器里直接运行。游戏里的数值为了好玩做过调整，讲的道理是真的。</p>
 </main>
-
-<script>
-const LAB = `<div class="lab">
-  <canvas id="sf" aria-label="按当前角度排出的 500 颗种子"></canvas>
-  <div class="read" id="sfRead"></div>
-  <input type="range" id="sfAngle" min="130" max="145" step="0.1" aria-label="每颗种子转过的角度">
-  <div class="presets"><button type="button" data-a="135">135°（3/8 圈）</button><button type="button" data-a="137.5">137.5°</button><button type="button" data-a="144">144°（2/5 圈）</button></div>
-</div>`;
-
-const topics = [
-  {
-    tab: '天空',
-    q: '天空为什么是蓝的？',
-    layers: [
-      { fig: 'I ∝ 1/λ⁴', note: '散射强度与波长的四次方成反比',
-        p: '阳光是所有颜色混在一起的。它撞上空气分子，会被弹向四面八方，这叫散射。波长越短，散射越强：蓝光（450 nm）被散射的强度大约是红光（700 nm）的 6 倍。于是蓝光洒满了整个天空，而红光大多笔直穿了过去。',
-        ask: '紫光的波长更短，天空为什么不是紫色？' },
-      { p: '三件事叠在一起：太阳发出的紫光本来就比蓝光少；高层大气又吸收掉一部分；最关键的是，你眼睛里的三种视锥细胞对紫光很迟钝。天空射来的其实是一大堆波长的混合，是大脑把它概括成了一个字：蓝。',
-        ask: '那“蓝”到底在哪里？在光里，还是在脑子里？' },
-      { fig: '红 + 绿 = 黄', note: '屏幕上的黄色里，没有一点黄光',
-        p: '光只有波长，没有颜色。颜色是大脑根据三种视锥细胞的信号比例算出来的。把屏幕放大看：黄色的地方只有红色和绿色的小灯在亮，你却看见了黄。品红色更彻底，光谱上根本没有对应它的波长，它完全是大脑造出来的。',
-        edge: '你看到的蓝，和别人看到的蓝，是同一种感觉吗？至今没有人知道该用什么实验去检验。' }
-    ]
-  },
-  {
-    tab: '向日葵',
-    q: '向日葵的种子为什么排成螺旋？',
-    layers: [
-      { fig: '34 · 55 · 89', note: '斐波那契数列：每一项是前两项之和',
-        p: '数一数向日葵花盘上的螺旋：顺时针和逆时针的条数几乎总是 34 和 55，或者 55 和 89。松果是 8 和 13，菠萝是 8、13 和 21。它们全是斐波那契数列里相邻的数。',
-        ask: '植物不会数数，这些数字是哪来的？' },
-      { p: '种子从花盘中心一颗一颗长出来。每一颗都比上一颗多转过一个固定的角度，然后被后来者往外推。植物只做这一件事。下面是 500 颗种子，你来当植物，换个角度试试：', lab: true,
-        ask: '只差 1° 就散架了。为什么偏偏是 137.5°？' },
-      { fig: '360° ÷ φ² ≈ 137.5°', note: 'φ ≈ 1.618，黄金比例',
-        p: '如果每次转的是一圈的简单分数，比如 2/5 圈，那么每 5 颗种子就回到同一个方向，排成 5 条直线，中间全是浪费的空隙。想不留空隙，就得用一个最不像分数的比例。数学上可以证明，最难用分数去逼近的数正是黄金比例 φ。而斐波那契数相邻两项的比值，恰好是 φ 最好的分数近似，所以你数出来的总是它们。',
-        ask: '可植物是怎么“找到”这个角度的？' },
-      { p: '没有谁去找。新的芽点总是长在离旧芽点最远、最空的位置：旧芽点会抽走周围的生长素，新芽只能在剩得最多的地方冒出来。只要反复执行“往最空的地方长”这一条规则，角度就自动收敛到 137.5°。1992 年，两位物理学家让磁性液滴在磁场里互相排斥着落下，得到了一模一样的螺旋。一点生物学都不需要。',
-        edge: '一条简单的局部规则就能长出向日葵。斑马的条纹、你的指纹、大脑的沟回，还有多少形状是这样自己长出来的？' }
-    ]
-  },
-  {
-    tab: '太阳',
-    q: '太阳为什么能亮这么久？',
-    layers: [
-      { fig: '400 万吨 / 秒', note: '太阳每秒变成能量的质量，E = mc²',
-        p: '太阳不是在烧。如果它是一整团煤，几千年就烧完了。它靠的是核聚变：每秒把大约 6 亿吨氢聚变成氦，其中约 400 万吨质量直接消失，变成了光和热。',
-        ask: '质子都带正电，互相排斥。它们怎么撞得到一起？' },
-      { fig: '1500 万 K ≪ 100 亿 K', note: '太阳核心的温度 与 硬闯所需的温度',
-        p: '按经典物理，撞不到。要靠热运动的速度硬冲过电排斥力，大约需要 100 亿度，而太阳核心只有 1500 万度。照这么算，太阳太冷了，根本不该发光。',
-        ask: '那它为什么亮着？' },
-      { p: '量子隧穿。质子不只是一颗小球，也是一团概率波，它有极小的机会直接出现在那堵它翻不过去的墙的另一边。这个机会小到：核心里的一个质子，平均要等上几十亿年才能聚变成功一次。但太阳里有大约 10<sup>57</sup> 个质子，所以每一秒仍有天文数字的反应在发生。',
-        ask: '如果隧穿再容易一点，会怎样？' },
-      { fig: '100 亿年', note: '太阳的寿命，现在刚过一半',
-        p: '太阳会很快把自己烧光。正因为聚变极难发生，它才能稳稳地亮 100 亿年，足够地球上的生命用 40 亿年演化出一个会问这个问题的你。而你身体里的碳、氧、铁，是更早的恒星用同样的办法造出来、又在死亡时撒向太空的。',
-        edge: '这些物理常数为什么恰好是这些数值？稍微改动一点，就既没有恒星，也没有我们。' }
-    ]
-  },
-  {
-    tab: '夜空',
-    q: '夜晚的天为什么是黑的？',
-    layers: [
-      { p: '“因为太阳下山了”并不够。1823 年，天文学家奥伯斯指出一个麻烦：如果宇宙无限大、无限老、到处都有恒星，那么无论你朝哪个方向看，视线最终都会撞上某颗恒星的表面。整个夜空应该和太阳表面一样刺眼。',
-        ask: '远处的星星更暗，这不就解决了吗？' },
-      { fig: '¼ × 4 = 1', note: '每颗暗到四分之一，数量却多到四倍',
-        p: '解决不了。距离加倍，每颗星的亮度降到 1/4；可是那个距离上一层球壳里的星星数量，正好变成 4 倍。两者刚好抵消，每一层贡献的光一样多。无限多层加起来，天空就该亮得没有边。',
-        ask: '那夜空凭什么是黑的？' },
-      { fig: '138 亿年', note: '宇宙的年龄',
-        p: '因为前提错了：宇宙不是无限老。光速有限，我们只能看到 138 亿年之内来得及赶到的光，更远的星光还在路上。况且宇宙在膨胀，远方来的光一路被拉长，变成了眼睛看不见的红外线和微波。',
-        ask: '那些被拉长的光，现在还在吗？' },
-      { fig: '2.725 K', note: '宇宙微波背景的温度',
-        p: '还在。天空的每个方向都有一层微弱的微波，那是宇宙 38 万岁时发出的光，一直走到今天。老式电视没有信号时的雪花点，大约有 1% 就来自它。所以夜空并不是真的黑，它只是亮在你看不见的波段。你抬头看到的黑暗，本身就是宇宙有过一个开端的证据。',
-        edge: '开端之前是什么？“之前”这个词，在那里还有意义吗？' }
-    ]
-  },
-  {
-    tab: '咖啡',
-    q: '热咖啡为什么只会变凉？',
-    layers: [
-      { p: '热量总是从热的地方流向冷的地方，从不反过来。怪的是，能量守恒并不反对反过来：周围的空气把热量还给咖啡，让它自己重新变烫，能量照样一分不差。',
-        ask: '那是哪条定律不允许？' },
-      { p: '没有哪条定律不允许。在微观上，分子碰撞是可逆的：把一段分子互相碰撞的录像倒着放，每一次碰撞依然完全符合物理定律。咖啡自己变烫并非不可能，只是不太可能。',
-        ask: '有多不可能？' },
-      { fig: 'S = k ln W', note: '熵 = 微观排列方式数目的对数（玻尔兹曼）',
-        p: '这是一道数数题。让能量均匀散开的分子排列方式，比让能量集中在杯子里的排列方式多得多。抛 100 枚硬币全是正面的概率约为 10<sup>−30</sup>，而一杯咖啡里有大约 10<sup>25</sup> 个分子。分子只是在随机乱撞，自然就撞进了占压倒多数的那一类状态里。',
-        ask: '所以“时间往前走”，只是概率？' },
-      { p: '很大程度上是。碎掉的杯子不会复原，你记得昨天却不记得明天，背后都是同一件事：熵在增加。但这只是把问题往回推了一步。熵能一直增加到今天，说明宇宙刚开始的时候，熵低得离谱。',
-        edge: '宇宙为什么从一个极其有序的状态开始？这是物理学最大的未解问题之一。' }
-    ]
-  }
-];
-
-const $ = id => document.getElementById(id);
-let t = 0, shown = topics.map(() => 1), angle = 137.5;
-
-function drawSeeds() {
-  const c = $('sf');
-  if (!c) return;
-  const size = c.clientWidth || 300, dpr = window.devicePixelRatio || 1;
-  c.width = c.height = Math.round(size * dpr);
-  const ctx = c.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.fillStyle = getComputedStyle(c).color;
-  const N = 500, R = size / 2 - 5, a = angle * Math.PI / 180;
-  for (let k = 1; k <= N; k++) {
-    const r = R * Math.sqrt(k / N);
-    ctx.beginPath();
-    ctx.arc(size / 2 + r * Math.cos(k * a), size / 2 + r * Math.sin(k * a), size / 115, 0, 7);
-    ctx.fill();
-  }
-  $('sfRead').textContent = angle.toFixed(1) + '°';
-}
-
-function render(scrollToNew) {
-  const topic = topics[t], n = shown[t];
-  $('tabs').innerHTML = topics.map((x, i) => `<button type="button" data-i="${i}" aria-pressed="${i === t}">${x.tab}</button>`).join('');
-  let html = '';
-  for (let i = 0; i < n; i++) {
-    const L = topic.layers[i];
-    const head = i === 0 ? `<h1>${topic.q}</h1>` : `<h2>${topic.layers[i - 1].ask}</h2>`;
-    html += `<section class="layer d${i + 1}${scrollToNew && i === n - 1 ? ' new' : ''}">
-      <p class="tag">第 ${i + 1} 层</p>${head}
-      ${L.fig ? `<div class="fig">${L.fig}<small>${L.note}</small></div>` : ''}
-      <p>${L.p}</p>${L.lab ? LAB : ''}</section>`;
-  }
-  const last = topic.layers[n - 1];
-  html += last.ask
-    ? `<button class="ask d${n + 1}" id="ask" type="button"><span class="tag">再问一层 ↓</span><b>${last.ask}</b></button>`
-    : `<div class="edge"><span class="tag">已知的边缘</span><b>${last.edge}</b></div>`;
-  $('stack').innerHTML = html;
-
-  if ($('sfAngle')) {
-    $('sfAngle').value = angle;
-    $('sfAngle').oninput = e => { angle = +e.target.value; drawSeeds(); };
-    document.querySelectorAll('.presets button').forEach(b => b.onclick = () => { angle = +b.dataset.a; $('sfAngle').value = angle; drawSeeds(); });
-    drawSeeds();
-  }
-  if ($('ask')) $('ask').onclick = () => { shown[t]++; render(true); };
-  if (scrollToNew) {
-    const el = document.querySelector('.layer.new');
-    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (el) el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
-  }
-}
-
-$('tabs').onclick = e => {
-  const b = e.target.closest('button');
-  if (!b) return;
-  t = +b.dataset.i;
-  render(false);
-};
-window.addEventListener('resize', drawSeeds);
-
-function start(d) {
-  if (Number.isInteger(d.t) && topics[d.t]) t = d.t;
-  if (Array.isArray(d.shown) && d.shown.length === topics.length) shown = d.shown.map((v, i) => Math.min(Math.max(1, v | 0), topics[i].layers.length));
-  if (typeof d.angle === 'number') angle = d.angle;
-  render(false);
-}
-window.claude?.hot?.snapshot?.(() => ({ t, shown, angle }));
-window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
-</script>
 </body>
 </html>
