@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>一只鸡的账单</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+/* 布局：单栏长页。两张并排的小票（市场的 / 我们的）是主角，其余都是安静的说明文字和按比例画的小图。 */
+:root {
+  --bg: #e9f0eb;        /* 青壳蛋的底色 */
+  --fg: #14302a;        /* 松针墨绿 */
+  --muted: #53695f;
+  --paper: #fbfdfb;     /* 小票纸 */
+  --line: #c3d3ca;
+  --yolk: #e5a900;      /* 蛋黄，只做填充 */
+  --yolk-ink: #7d5200;  /* 蛋黄色的文字版本 */
+  --quiet: #a9bcb2;     /* 市场一侧的图形 */
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-num: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1916; --fg: #e3eee8; --muted: #9bb0a6; --paper: #15251f; --line: #2c4239;
+    --yolk: #f0bf45; --yolk-ink: #f0bf45; --quiet: #4a6258;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1916; --fg: #e3eee8; --muted: #9bb0a6; --paper: #15251f; --line: #2c4239;
+  --yolk: #f0bf45; --yolk-ink: #f0bf45; --quiet: #4a6258;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.8;
+}
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-block: 0 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+.draft {
+  background: var(--yolk);
+  color: #2b1d00;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-block: .6rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  text-align: center;
+}
+header { padding-top: 3.5rem; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.1rem, 8vw, 3.4rem); font-weight: 900; line-height: 1.25; }
+h2 { font-size: clamp(1.45rem, 5vw, 1.9rem); font-weight: 700; line-height: 1.4; }
+p { margin: 0; max-width: 34em; }
+.lead { font-size: 1.1rem; margin-top: 1.2rem; }
+section { display: flex; flex-direction: column; gap: 1.2rem; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; line-height: 1.7; }
+strong { font-weight: 700; }
+
+/* 小票 */
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 1rem; align-items: start; }
+.bill {
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 1.1rem 1rem 1.2rem;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.bill h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+.bill .sub { color: var(--muted); font-size: 13px; }
+.bill dl { margin: .9rem 0 0; display: flex; flex-direction: column; gap: .55rem; }
+.row { display: flex; align-items: baseline; gap: .5rem; }
+.row dt { flex: 1; min-width: 0; }
+.row dt small { display: block; color: var(--muted); font-size: 12.5px; font-family: var(--font-num); }
+.row dd { margin: 0; font-family: var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row.sum { border-top: 1px dashed var(--fg); padding-top: .6rem; margin-top: .2rem; font-weight: 700; }
+.row.big dd { font-size: 1.35rem; }
+.bill.ours { border-color: var(--fg); }
+.bill.ours .row.big dd { color: var(--yolk-ink); }
+.tag {
+  display: inline-block; margin-left: .4rem; padding: 0 .4rem;
+  border: 1px solid var(--yolk-ink); color: var(--yolk-ink);
+  font-size: 11.5px; font-weight: 500; line-height: 1.5; vertical-align: 2px;
+}
+
+/* 按比例的小图 */
+.fig { display: flex; flex-direction: column; gap: .7rem; }
+.fig .cap { font-size: 14px; display: flex; justify-content: space-between; gap: 1rem; }
+.fig .cap b { font-family: var(--font-num); font-weight: 700; white-space: nowrap; }
+.bar { height: 14px; background: var(--quiet); min-width: 2px; }
+.bar.ours { background: var(--yolk); }
+.year { display: grid; grid-template-columns: repeat(31, 1fr); gap: 2px; max-width: 420px; }
+.year i { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line); }
+.year i.e { background: var(--quiet); border-color: var(--quiet); }
+.year.ours i.e { background: var(--yolk); border-color: var(--yolk); }
+.space { display: flex; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; }
+.space figure { margin: 0; display: flex; flex-direction: column; gap: .4rem; font-size: 14px; }
+.sq { background: var(--quiet); }
+.sq.ours { background: var(--yolk); }
+
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.4rem; }
+.three div { min-width: 0; border-top: 2px solid var(--fg); padding-top: .7rem; }
+.three h3 { margin: 0 0 .3rem; font-family: var(--font-display); font-size: 1.15rem; }
+.three p { font-size: 15px; line-height: 1.75; }
+ul.check { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: .4rem; max-width: 34em; }
+.contact { font-family: var(--font-num); user-select: all; }
+footer { border-top: 1px solid var(--line); padding-top: 1.2rem; }
+</style>
+</head>
+<body>
+<div class="draft" id="draft">草稿：带「示例」标记的数字是占位的，发给客户前请换成你的真实数据。</div>
+<div class="wrap">
+
+<header>
+  <h1>一只鸡，<br>该卖多少钱？</h1>
+  <p class="lead">先别看价格。把一只鸡从出壳到出栏吃掉的粮食、占用的日子一项一项加起来，再看这个数字贵不贵。</p>
+</header>
+
+<section>
+  <h2>先看日子</h2>
+  <p>市场上最常见的肉鸡是快大型白羽鸡，大约 42 天出栏。我们的鸡要养到自然长成。</p>
+  <div class="fig" id="fig-days"></div>
+</section>
+
+<section>
+  <h2>账单一：一只鸡</h2>
+  <p>左边是行业常见水平的约数，右边是我们自己的账。每一行都写了算式，可以自己按一遍计算器。</p>
+  <div class="pair" id="bill-chicken"></div>
+  <p class="muted small">多养一天，就多吃一天的粮、多担一天的风险。日子长了四倍，每斤肉摊到的成本自然不是一个数量级。</p>
+</section>
+
+<section>
+  <h2>账单二：一个蛋</h2>
+  <p>母鸡每天都要吃粮，不管当天下不下蛋。一年下的蛋越少，每个蛋摊到的粮食就越多。</p>
+  <div class="pair">
+    <div class="fig">
+      <div class="cap"><span>高产笼养蛋鸡的一年</span><b id="cap-egg-m"></b></div>
+      <div class="year" id="year-m"></div>
+    </div>
+    <div class="fig">
+      <div class="cap"><span>我们的母鸡的一年</span><b id="cap-egg-o"></b></div>
+      <div class="year ours" id="year-o"></div>
+    </div>
+  </div>
+  <p class="muted small">一个圆点是一天，实心的是下蛋的日子。</p>
+  <div class="pair" id="bill-egg"></div>
+</section>
+
+<section>
+  <h2>再看地方</h2>
+  <p>笼养蛋鸡每只占的笼底面积通常不到一张 A4 纸。下面两个方块按真实面积的比例画。</p>
+  <div class="space" id="fig-space"></div>
+</section>
+
+<section>
+  <h2>便宜是怎么做到的</h2>
+  <p>超市里的价格并不是鸡和蛋本来的价格。它是把时间、空间、产量三样都压到极限之后的价格。</p>
+  <div class="three">
+    <div><h3>时间</h3><p>选长得最快的品种，配最高效的饲料，把出栏时间压到六周左右。</p></div>
+    <div><h3>空间</h3><p>层叠笼养，一栋鸡舍可以养几万只，每只鸡分到的地方按平方厘米算。</p></div>
+    <div><h3>产量</h3><p>选产蛋最多的品种，控制光照，让一只母鸡一年下三百个蛋以上。</p></div>
+  </div>
+  <p>这些做法合规，也让所有人都吃得起鸡和蛋。只是它和慢慢养大的鸡不是同一种东西，价格也就没法放在一起比。我们的价格，是这三样都没有压的时候，一只鸡本来要花的钱。</p>
+</section>
+
+<section>
+  <h2>不用信我们，可以自己看</h2>
+  <ul class="check">
+    <li>每批鸡的进苗日期和出栏日期都可以查。</li>
+    <li>喂的是什么，饲料清单可以给你看。</li>
+    <li>欢迎直接来鸡场，看鸡在哪里跑、蛋在哪里捡。</li>
+  </ul>
+  <p id="contact-line">联系我们：<span class="contact" id="contact"></span></p>
+</section>
+
+<footer class="muted small">
+  <p>市场一侧的数字是行业常见水平的约数，不同地区、不同年份会有出入：白羽肉鸡约 42 天出栏、体重约 5 斤、每长 1 斤肉约吃 1.6 斤饲料；高产蛋鸡年产蛋约 300 枚、每天吃料约 0.22 斤。</p>
+</footer>
+</div>
+
+<script>
+/* ============ 只需要改这里 ============
+   ours 里的数字全部是示例，请换成你的真实数据。
+   换完后把 draft 改成 false，页面顶部的黄条和「示例」标记就会消失。 */
+const CONFIG = {
+  draft: true,
+  contact: '',                 // 例如 '微信 xxxx' 或电话；留空则不显示这一行
+  chicken: {
+    market: { days: 42, weightJin: 5, chick: 3, feedJin: 8, feedPrice: 1.9, other: 3 },
+    ours:   { days: 180, weightJin: 3.5, chick: 6, feedJin: 22, feedPrice: 1.6,
+              labor: 15, vet: 3, survival: 0.85, pricePerJin: 35 }
+  },
+  egg: {
+    market: { perYear: 300, feedPerDayJin: 0.22, feedPrice: 1.5, other: 0.12 },
+    ours:   { perYear: 150, feedPerDayJin: 0.24, feedPrice: 1.8, other: 0.6, priceEach: 2.5 }
+  },
+  space: { marketCm2: 450, oursM2: 2 }   // 每只鸡的活动面积
+};
+/* ===================================== */
+
+const $ = id => document.getElementById(id);
+const yuan = (n, d = 1) => '¥' + n.toFixed(d);
+const tag = CONFIG.draft ? '<span class="tag">示例</span>' : '';
+if (!CONFIG.draft) $('draft').hidden = true;
+
+function bill(title, sub, rows, ours) {
+  const body = rows.map(r =>
+    `<div class="row ${r.cls || ''}"><dt>${r.label}${r.calc ? `<small>${r.calc}</small>` : ''}</dt><dd>${r.value}</dd></div>`
+  ).join('');
+  return `<div class="bill ${ours ? 'ours' : ''}"><h3>${title}${ours ? tag : ''}</h3><div class="sub">${sub}</div><dl>${body}</dl></div>`;
+}
+
+/* 日子 */
+(function () {
+  const m = CONFIG.chicken.market.days, o = CONFIG.chicken.ours.days, max = Math.max(m, o);
+  $('fig-days').innerHTML =
+    `<div class="cap"><span>快大型白羽肉鸡</span><b>${m} 天</b></div><div class="bar" style="width:${m / max * 100}%"></div>` +
+    `<div class="cap"><span>我们的鸡${tag}</span><b>${o} 天</b></div><div class="bar ours" style="width:${o / max * 100}%"></div>`;
+})();
+
+/* 鸡的账单 */
+(function () {
+  const m = CONFIG.chicken.market, o = CONFIG.chicken.ours;
+  const mFeed = m.feedJin * m.feedPrice, mTotal = m.chick + mFeed + m.other;
+  const oFeed = o.feedJin * o.feedPrice, oSub = o.chick + oFeed + o.labor + o.vet;
+  const oLoss = oSub / o.survival - oSub, oTotal = oSub + oLoss;
+  const dead = Math.round((1 - o.survival) * 100);
+  const left = bill('快大型白羽肉鸡', `养 ${m.days} 天，出栏约 ${m.weightJin} 斤`, [
+    { label: '鸡苗', value: yuan(m.chick) },
+    { label: '饲料', calc: `${m.feedJin} 斤 × ${m.feedPrice} 元`, value: yuan(mFeed) },
+    { label: '人工、水电、防疫', value: yuan(m.other) },
+    { label: '一只鸡的成本', value: yuan(mTotal), cls: 'sum' },
+    { label: '每斤成本', calc: `÷ ${m.weightJin} 斤`, value: yuan(mTotal / m.weightJin), cls: 'big' }
+  ]);
+  const rows = [
+    { label: '鸡苗', value: yuan(o.chick) },
+    { label: '粮食', calc: `${o.feedJin} 斤 × ${o.feedPrice} 元`, value: yuan(oFeed) },
+    { label: '人工和场地', value: yuan(o.labor) },
+    { label: '防疫', value: yuan(o.vet) },
+    { label: '损耗', calc: `100 只里约 ${dead} 只养不到出栏`, value: yuan(oLoss) },
+    { label: '一只鸡的成本', value: yuan(oTotal), cls: 'sum' },
+    { label: '每斤成本', calc: `÷ ${o.weightJin} 斤`, value: yuan(oTotal / o.weightJin), cls: 'big' }
+  ];
+  if (o.pricePerJin) rows.push({ label: '我们的售价', calc: '每斤', value: yuan(o.pricePerJin) });
+  $('bill-chicken').innerHTML = left + bill('我们的鸡', `养 ${o.days} 天，出栏约 ${o.weightJin} 斤`, rows, true);
+})();
+
+/* 蛋：一年的圆点 + 账单 */
+(function () {
+  const m = CONFIG.egg.market, o = CONFIG.egg.ours;
+  const dots = n => Array.from({ length: 365 }, (_, i) =>
+    `<i${Math.floor((i + 1) * n / 365) > Math.floor(i * n / 365) ? ' class="e"' : ''}></i>`).join('');
+  $('year-m').innerHTML = dots(m.perYear); $('cap-egg-m').textContent = `约 ${m.perYear} 个蛋`;
+  $('year-o').innerHTML = dots(o.perYear); $('cap-egg-o').innerHTML = `约 ${o.perYear} 个蛋`;
+  const one = (x, title, sub, otherLabel, ours) => {
+    const yearFeed = x.feedPerDayJin * 365, cost = yearFeed * x.feedPrice, per = cost / x.perYear;
+    const rows = [
+      { label: '一年吃的粮食', calc: `${x.feedPerDayJin} 斤 × 365 天 × ${x.feedPrice} 元`, value: yuan(cost, 0) },
+      { label: '每个蛋摊到的粮食', calc: `÷ ${x.perYear} 个`, value: yuan(per, 2) },
+      { label: otherLabel, value: yuan(x.other, 2) },
+      { label: '一个蛋的成本', value: yuan(per + x.other, 2), cls: 'sum big' }
+    ];
+    if (x.priceEach) rows.push({ label: '我们的售价', calc: '每个', value: yuan(x.priceEach, 2) });
+    return bill(title, sub, rows, ours);
+  };
+  $('bill-egg').innerHTML =
+    one(m, '笼养鸡蛋', `一只母鸡一年约 ${m.perYear} 个蛋`, '育成、人工、设备等', false) +
+    one(o, '我们的蛋', `一只母鸡一年约 ${o.perYear} 个蛋`, '育成期、人工、破损等', true);
+})();
+
+/* 地方：方块面积按比例，边长取面积的平方根 */
+(function () {
+  const a = CONFIG.space.marketCm2, b = CONFIG.space.oursM2 * 10000;
+  const big = 200, small = Math.max(6, Math.round(big * Math.sqrt(a / b)));
+  $('fig-space').innerHTML =
+    `<figure><div class="sq" style="width:${small}px;height:${small}px"></div><figcaption>笼养：约 ${a} 平方厘米</figcaption></figure>` +
+    `<figure><div class="sq ours" style="width:${big}px;height:${big}px;max-width:100%"></div><figcaption>我们：约 ${CONFIG.space.oursM2} 平方米${tag}，是左边的 ${Math.round(b / a)} 倍</figcaption></figure>`;
+})();
+
+if (CONFIG.contact) $('contact').textContent = CONFIG.contact; else $('contact-line').hidden = true;
+</script>
+</body>
+</html>
